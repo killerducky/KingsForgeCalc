@@ -20,53 +20,6 @@
         tools:context=".MainActivity" >
 
         <EditText
-            android:id="@+id/craft_black0"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="#ff000000"
-            android:hint="@string/none"
-            android:inputType="number"
-            android:textColor="#ffffffff" />
-
-        <EditText
-            android:id="@+id/craft_black1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="#ff000000"
-            android:hint="@string/none"
-            android:inputType="number"
-            android:textColor="#ffffffff" />
-        
-        <EditText
-            android:id="@+id/craft_green0"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="#ff00ff00"
-            android:hint="@string/none"
-            android:inputType="number"
-            android:textColor="#ffffffff" />
-        
-        <EditText
-            android:id="@+id/craft_green1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="#ff00ff00"
-            android:hint="@string/none"
-            android:inputType="number"
-            android:textColor="#ffffffff" />
-    </LinearLayout>
-    
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        tools:context=".MainActivity" >
-
-        <EditText
             android:id="@+id/supply_black"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

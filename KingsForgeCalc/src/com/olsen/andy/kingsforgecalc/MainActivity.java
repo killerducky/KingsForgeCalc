@@ -21,6 +21,9 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 
 	Random random = new Random(new Date().getTime());
+	
+    private List<GameObject> craftcard_die;  // list of craft card requirements
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,19 +32,21 @@ public class MainActivity extends Activity {
         EditText editText;
         editText = (EditText) findViewById(R.id.supply_black); editText.setText("3");
         editText = (EditText) findViewById(R.id.supply_green); editText.setText("3");
-        editText = (EditText) findViewById(R.id.supply_red);   editText.setText("3");
-        editText = (EditText) findViewById(R.id.supply_blue);  editText.setText("3");
-        editText = (EditText) findViewById(R.id.craft_black0); editText.setText("3");
-        editText = (EditText) findViewById(R.id.craft_black1); editText.setText("3");
-        editText = (EditText) findViewById(R.id.craft_green0); editText.setText("3");
-        editText = (EditText) findViewById(R.id.craft_green1); editText.setText("3");
+        editText = (EditText) findViewById(R.id.supply_red  ); editText.setText("3");
+        editText = (EditText) findViewById(R.id.supply_blue ); editText.setText("3");
 
-        List<GameObject> craftcard_die = new ArrayList<GameObject>();
+        craftcard_die = new ArrayList<GameObject>();
+        /*
         for (int i=0; i<2; i++) {
         	for (GameObject.GOColor color : GameObject.GOColor.values()) {
       			craftcard_die.add(new GameObject(i, color));
         	}
         }
+        */
+    	craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
+    	craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
+    	craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN));
+    	craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN));
         GridView gridview = (GridView) findViewById(R.id.craftcard_grid);
         CraftDieAdapter adapter = new CraftDieAdapter(this, craftcard_die);
         gridview.setAdapter(adapter);
@@ -68,29 +73,23 @@ public class MainActivity extends Activity {
     	List<Integer> blackNeeded = new ArrayList<Integer>();
     	List<Integer> greenNeeded = new ArrayList<Integer>();
 
-    	int tmpInt;
     	EditText editText;
 		String result = "";
     	double successes = 0;
     	int totalRolls = 10000;  
     	boolean haveEnoughDice = true;
-    	 
+
 
     	// get craft requirements out of the widgets
     	try {
-    		editText = (EditText) findViewById(R.id.craft_black0);
-    		tmpInt = Integer.parseInt(editText.getText().toString());
-    		if (tmpInt>0) { blackNeeded.add(tmpInt); }
-    		editText = (EditText) findViewById(R.id.craft_black1);
-    		tmpInt = Integer.parseInt(editText.getText().toString());
-    		if (tmpInt>0) { blackNeeded.add(tmpInt); }
+    		for (GameObject go : craftcard_die) {
+    			switch (go.getColor()) {
+    			case BLACK: blackNeeded.add(go.getValue()); break;
+    			case GREEN: greenNeeded.add(go.getValue()); break;
+    			default: break;	// TODO: add other colors
+    			}
+    		}
 
-    		editText = (EditText) findViewById(R.id.craft_green0);
-    		tmpInt = Integer.parseInt(editText.getText().toString());
-    		if (tmpInt>0) { greenNeeded.add(tmpInt); }
-    		editText = (EditText) findViewById(R.id.craft_green1);
-    		tmpInt = Integer.parseInt(editText.getText().toString());
-    		if (tmpInt>0) { greenNeeded.add(tmpInt); }
 
     		// get dice supply counts out of the widgets
     		editText = (EditText) findViewById(R.id.supply_black);
