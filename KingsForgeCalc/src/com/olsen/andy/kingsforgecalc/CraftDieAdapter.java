@@ -10,11 +10,11 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-public class CraftDieAdapter extends ArrayAdapter<GameObject> {
+public class CraftDieAdapter extends ArrayAdapter<Object> {
 
 	private Integer selected_pos;
 	
-	public CraftDieAdapter(Context context, List<GameObject> objects, Integer selected_pos) {
+	public CraftDieAdapter(Context context, List<Object> objects, Integer selected_pos) {
 		super(context, android.R.layout.simple_list_item_1, objects);
 		this.selected_pos = selected_pos;
 	}
@@ -29,22 +29,29 @@ public class CraftDieAdapter extends ArrayAdapter<GameObject> {
 
 	public View getView(int pos, View convertView, ViewGroup parent) {
 		TextView tv = (TextView) super.getView(pos, convertView, parent);
-		GameObject go = super.getItem(pos);
-		switch (go.getColor()) {
-		case BLACK: tv.setBackgroundColor(Color.BLACK); break;
-		case GREEN: tv.setBackgroundColor(Color.GREEN); break;
-		case RED  : tv.setBackgroundColor(Color.RED  ); break;
-		case BLUE : tv.setBackgroundColor(Color.BLUE ); break;
-		case WHITE: tv.setBackgroundColor(Color.WHITE); break;
+		Object o = super.getItem(pos);
+		if (o instanceof GameObject) {
+			GameObject go = (GameObject) o;
+			switch (go.getColor()) {
+			case BLACK: tv.setBackgroundColor(Color.BLACK); break;
+			case GREEN: tv.setBackgroundColor(Color.GREEN); break;
+			case RED  : tv.setBackgroundColor(Color.RED  ); break;
+			case BLUE : tv.setBackgroundColor(Color.BLUE ); break;
+			case WHITE: tv.setBackgroundColor(Color.WHITE); break;
+			}
+			if (selected_pos != null && pos == selected_pos) {
+				tv.setText(">" + go.getValue() + "<");
+			}
+			switch (go.getColor()) {
+			case WHITE: tv.setTextColor(Color.BLACK); break;
+			default: tv.setTextColor(Color.WHITE);    break;
+			}
+			tv.setGravity(Gravity.CENTER);
+		} else {
+			if (selected_pos != null && pos == selected_pos) {
+				tv.setText(">" + o.toString() + "<");
+			}
 		}
-		if (selected_pos != null && pos == selected_pos) {
-			tv.setText(">" + go.getValue() + "<");
-		}
-		switch (go.getColor()) {
-		case WHITE: tv.setTextColor(Color.BLACK); break;
-		default: tv.setTextColor(Color.WHITE);    break;
-		}
-		tv.setGravity(Gravity.CENTER);
 		return tv;
 	}
 

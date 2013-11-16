@@ -1,8 +1,10 @@
 package com.olsen.andy.kingsforgecalc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -20,22 +22,24 @@ public class MainActivity extends Activity {
 
 	Random random = new Random(new Date().getTime());
 	
-    private List<GameObject>  craftcard_die;    // list of craft card requirements
+    private List<Object>      craftcard_die;    // list of craft card requirements
     private List<String>      craftcard_tools;  // list of tools to manipulate craftcard_die
     private CraftDieAdapter   ccd_adapter;
     private CraftToolsAdapter cct_adapter;
     
-    private List<GameObject>  supply_die;      // list of supply die available
+    private List<Object>      supply_die;      // list of supply die available
     private List<String>      supply_tools;    // list of tools to manipulate suply_die
     private CraftDieAdapter   supply_adapter;  // for now can just use the same adapter class
-    private CraftToolsAdapter supplyT_adapter; //   " 
+    private CraftToolsAdapter supplyT_adapter; //   "
+    
+    public List<String> bonuses = Arrays.asList("+1", "+1 (3)", "+2", "1->6", "auto6", "reroll", "white die");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        craftcard_die = new ArrayList<GameObject>();
+        craftcard_die = new ArrayList<Object>();
     	craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
     	craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
     	craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN));
@@ -66,12 +70,12 @@ public class MainActivity extends Activity {
         	}
         });
 
-        supply_die = new ArrayList<GameObject>();
+        supply_die = new ArrayList<Object>();
     	supply_die.add(new GameObject(3, GameObject.GOColor.BLACK));
     	supply_die.add(new GameObject(3, GameObject.GOColor.GREEN));
     	supply_die.add(new GameObject(3, GameObject.GOColor.RED  ));
     	supply_die.add(new GameObject(3, GameObject.GOColor.BLUE ));
-    	for (GameObject go : supply_die) { go.setMin(0); go.setMax(50); }
+    	for (Object o : supply_die) { GameObject go = (GameObject) o; go.setMin(0); go.setMax(50); }
         GridView supply_gv = (GridView) findViewById(R.id.supply_grid);
         supply_adapter = new CraftDieAdapter(this, supply_die, null); // TODO CraftDie?
         supply_gv.setAdapter(supply_adapter);
@@ -85,13 +89,9 @@ public class MainActivity extends Activity {
         supply_tools.add(new String("+"));
         supply_tools.add(new String("-"));
         supply_tools.add(new String("X"));
-        supply_tools.add(new String("+1"));
-        supply_tools.add(new String("+1 (3)"));
-        supply_tools.add(new String("+2"));
-        supply_tools.add(new String("1->6"));
-        supply_tools.add(new String("auto6"));
-        supply_tools.add(new String("reroll"));
-        supply_tools.add(new String("white die"));
+        for (String bonus : bonuses) {
+            supply_tools.add(bonus);
+        }
         GridView supplyT_gv = (GridView) findViewById(R.id.supply_tools);
         supplyT_adapter = new CraftToolsAdapter(this, supply_tools);
         supplyT_gv.setAdapter(supplyT_adapter);
@@ -115,7 +115,7 @@ public class MainActivity extends Activity {
     	String str = craftcard_tools.get(pos).toString();
 
     	if (ccd_adapter.getSelectedPos() != null) {
-        	GameObject go = craftcard_die.get((int) ccd_adapter.getSelectedPos());
+        	GameObject go = (GameObject) craftcard_die.get((int) ccd_adapter.getSelectedPos());
     		if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
     		else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
     		else if ("X".equals(str)) { 
@@ -128,14 +128,17 @@ public class MainActivity extends Activity {
     		}
     	}
     	if ("Black".equals(str)) { 
-    		craftcard_die.add(new GameObject(1, GameObject.GOColor.BLACK)); 
+    		craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK)); 
     		ccd_adapter.setSelectedPos(craftcard_die.size()-1);
     	} else if ("Green".equals(str)) { 
-    		craftcard_die.add(new GameObject(1, GameObject.GOColor.GREEN)); 
+    		craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN)); 
+    		ccd_adapter.setSelectedPos(craftcard_die.size()-1);
     	} else if ("Red".equals(str)) { 
-    		craftcard_die.add(new GameObject(1, GameObject.GOColor.RED)); 
+    		craftcard_die.add(new GameObject(4, GameObject.GOColor.RED)); 
+    		ccd_adapter.setSelectedPos(craftcard_die.size()-1);
     	} else if ("Blue".equals(str)) { 
-    		craftcard_die.add(new GameObject(1, GameObject.GOColor.BLUE)); 
+    		craftcard_die.add(new GameObject(4, GameObject.GOColor.BLUE)); 
+    		ccd_adapter.setSelectedPos(craftcard_die.size()-1);
     	}
 
     	// TODO: currently inconsistent on who is responsible to call this
@@ -146,29 +149,47 @@ public class MainActivity extends Activity {
     	if (supply_adapter.getSelectedPos() != null && supply_adapter.getSelectedPos() == pos) {
     		supply_adapter.setSelectedPos(null);  // unselect
     	} else {
-		    supply_adapter.setSelectedPos(pos);
+    		supply_adapter.setSelectedPos(pos);
     	}
     }
-   
+
     private void onSupplyToolsClick(int pos) {
-    	if (supply_adapter.getSelectedPos() == null) { return; }  // TODO: Eventually there are add tools we need to handle here
-    	GameObject go = supply_die.get(supply_adapter.getSelectedPos()); // FIXME:  cast to int?
     	String str = supply_tools.get(pos).toString();
-    	if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
-    	else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
-    	else if ("X".equals(str)) { go.setValue(0);                 }
+    	if (supply_adapter.getSelectedPos() != null) { 
+    		Object o = supply_die.get(supply_adapter.getSelectedPos());
+    		if (o instanceof GameObject) {
+    			GameObject go = (GameObject) o;
+    			if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
+    			else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
+    			else if ("X".equals(str)) { go.setValue(0);                 }
+    		} else {
+                // Handle bonuses, which right now are just strings
+                if ("X".equals(str)) {  
+        			supply_die.remove((int) supply_adapter.getSelectedPos());  // XXX: omg Integer objects mess things up here, cast to int
+        			if (supply_die.size()==0) {
+        				supply_adapter.setSelectedPos(null); // XXX: Actually this is impossible, cannot delete the 4 colors
+        			} else if (supply_adapter.getSelectedPos() >= supply_die.size()) { 
+        				supply_adapter.setSelectedPos(supply_die.size()-1);
+        			}
+                }
+    		}
+    	}
+    	if (bonuses.contains(str)) {
+    		supply_die.add(new String(str)); 
+    		supply_adapter.setSelectedPos(null);
+    	}
     	// TODO: currently inconsistent on who is responsible to call this
     	supply_adapter.notifyDataSetChanged();
     }
-  
 
- 
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
+    	// Inflate the menu; this adds items to the action bar if it is present.
+    	getMenuInflater().inflate(R.menu.main, menu);
+    	return true;
     }
     
     // TODO: Eventually this will be a separate thing that nicely displays your one roll result
@@ -187,22 +208,31 @@ public class MainActivity extends Activity {
     	List<Integer> blackNeeded = new ArrayList<Integer>();
     	List<Integer> greenNeeded = new ArrayList<Integer>();
 
+    	HashMap<GameObject.GOColor, List<Integer>> needed = new HashMap<GameObject.GOColor, List<Integer>>();
+    	for (GameObject.GOColor color : GameObject.GOColor.values()) {
+    		needed.put(color, new ArrayList<Integer>());
+    	}
+
     	String result = "";
     	double successes = 0;
     	boolean haveEnoughDice = true;
 
     	// get craft requirements out of the widgets
-    	for (GameObject go : craftcard_die) {
-    		switch (go.getColor()) {
-    		case BLACK: blackNeeded.add(go.getValue()); break;
-    		case GREEN: greenNeeded.add(go.getValue()); break;
-    		default: break;	// TODO: add other colors
-    		}
+    	for (Object o : craftcard_die) {
+    		GameObject go = (GameObject) o;
+    		needed.get(go.getColor()).add(go.getValue());
     	}
 
-        // the supply_die list is in the same order as supplyList 
-    	for (GameObject go : supply_die) {
-    		supplyList.add(go.getValue());
+    	blackNeeded = needed.get(GameObject.GOColor.BLACK);
+    	greenNeeded = needed.get(GameObject.GOColor.GREEN);
+    	
+        // TODO: hacky but the GameObjects in order are what we want
+    	// The other objects are bonuses
+    	for (Object o : supply_die) {
+    		if (o instanceof GameObject) {
+    			GameObject go = (GameObject) o;
+    			supplyList.add(go.getValue());
+    		}
     	}
     	
     	Collections.sort(blackNeeded);
