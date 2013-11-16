@@ -12,7 +12,6 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.TextView;
@@ -23,7 +22,6 @@ public class MainActivity extends Activity {
 
 	Random random = new Random(new Date().getTime());
 
-	public static final String EXTRA_MESSAGE = "com.olsen.andy.kingsforgecalc.MESSAGE";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,13 +35,15 @@ public class MainActivity extends Activity {
         editText = (EditText) findViewById(R.id.craft_black1); editText.setText("3");
         editText = (EditText) findViewById(R.id.craft_green0); editText.setText("3");
         editText = (EditText) findViewById(R.id.craft_green1); editText.setText("3");
-        
-        List<Integer> number_array = new ArrayList<Integer>();
-        for (int i=0; i<10; i++) {
-        	number_array.add(i);
+
+        List<GameObject> craftcard_die = new ArrayList<GameObject>();
+        for (int i=0; i<2; i++) {
+        	for (GameObject.GOColor color : GameObject.GOColor.values()) {
+      			craftcard_die.add(new GameObject(i, color));
+        	}
         }
         GridView gridview = (GridView) findViewById(R.id.craftcard_grid);
-        CraftDieAdapter adapter = new CraftDieAdapter(this, number_array);
+        CraftDieAdapter adapter = new CraftDieAdapter(this, craftcard_die);
         gridview.setAdapter(adapter);
         gridview.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
