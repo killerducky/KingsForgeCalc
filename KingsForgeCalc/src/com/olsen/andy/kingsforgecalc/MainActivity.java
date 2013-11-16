@@ -14,7 +14,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
@@ -56,6 +55,10 @@ public class MainActivity extends Activity {
         craftcard_tools.add(new String("+"));
         craftcard_tools.add(new String("-"));
         craftcard_tools.add(new String("X"));
+        craftcard_tools.add(new String("Black"));
+        craftcard_tools.add(new String("Green"));
+        craftcard_tools.add(new String("Red"));
+        craftcard_tools.add(new String("Blue"));
         GridView cct_gv = (GridView) findViewById(R.id.craftcard_tools);
         cct_adapter = new CraftToolsAdapter(this, craftcard_tools);
         cct_gv.setAdapter(cct_adapter);
@@ -112,18 +115,37 @@ public class MainActivity extends Activity {
     	}
     	ccd_adapter.setSelectedPos(selected_craft_pos);
     }
-    
+
     private void onCraftcardToolsClick(int pos) {
-    	if (selected_craft_pos == null) { return; }  // TODO: Eventually there are add tools we need to handle here
-    	GameObject go = craftcard_die.get(selected_craft_pos);
     	String str = craftcard_tools.get(pos).toString();
-    	if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
-    	else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
-    	else if ("X".equals(str)) {         } // TODO: implement this
+
+    	if (selected_craft_pos != null) {
+        	GameObject go = craftcard_die.get(selected_craft_pos);
+    		if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
+    		else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
+    		else if ("X".equals(str)) { 
+    			craftcard_die.remove((int) selected_craft_pos);  // XXX: omg Integer objects mess things up here, cast to int
+    			selected_craft_pos = null;
+    		}
+    	}
+    	if ("Black".equals(str)) { 
+    		craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK)); 
+    		//selected_craft_pos = craftcard_die.size()-1;
+    	} else if ("Green".equals(str)) { 
+    		craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN)); 
+    		//selected_craft_pos = craftcard_die.size()-1;
+    	} else if ("Red".equals(str)) { 
+    		craftcard_die.add(new GameObject(4, GameObject.GOColor.RED)); 
+    		//selected_craft_pos = craftcard_die.size()-1;
+    	} else if ("Blue".equals(str)) { 
+    		craftcard_die.add(new GameObject(4, GameObject.GOColor.BLUE)); 
+    		//selected_craft_pos = craftcard_die.size()-1;
+    	}
+
     	// TODO: currently inconsistent on who is responsible to call this
     	ccd_adapter.notifyDataSetChanged();
     }
-  
+
     private void onSupplyDieClick(int pos) {
     	if (selected_supply_pos != null && selected_supply_pos == pos) {
     		selected_supply_pos = null;  // unselect
