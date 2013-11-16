@@ -5,8 +5,12 @@ public class GameObject {
 	
     private Integer value;
     private GOColor color;
+    private Integer min;    // TODO it's dumb to have a bunch of copies of these values...
+    private Integer max;
     
     public GameObject(Integer value, GOColor color) {
+    	setMin(1);  // make sure to set min/max first
+    	setMax(6);
     	setValue(value);
     	setColor(color);
     }
@@ -16,11 +20,14 @@ public class GameObject {
     }
     
     public void setValue(Integer value) { 
-    	if (value < 1) { value = 1; }
-    	if (value > 6) { value = 6; }
+    	if (value < min) { value = min; }
+    	if (value > max) { value = max; }
     	this.value = value;
     }
     public void setColor(GOColor color) { this.color = color; }
+    public void setMin(Integer min) { this.min = min; }
+    public void setMax(Integer max) { this.max = max; }
+
     public Integer getValue() { return value; }
     public GOColor getColor() { return color; }
 }

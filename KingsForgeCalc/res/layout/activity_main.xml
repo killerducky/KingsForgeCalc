@@ -20,58 +20,39 @@
         android:columnWidth="50dp"
         android:numColumns="auto_fit" >
     </GridView>
+
+    <GridView
+        android:id="@+id/supply_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnWidth="50dp"
+        android:numColumns="auto_fit" >
+    </GridView>
+
+    <GridView
+        android:id="@+id/supply_tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnWidth="70dp"
+        android:numColumns="auto_fit" >
+    </GridView>
     
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="100dp"
         android:orientation="horizontal"
+        android:gravity="center"
         tools:context=".MainActivity" >
-
-        <EditText
-            android:id="@+id/supply_black"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="#ff000000"
-            android:hint="@string/supply_black"
-            android:inputType="number"
-            android:textColor="#ffffffff" />
-
-        <EditText
-            android:id="@+id/supply_green"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="#ff00ff00"
-            android:hint="@string/supply_green"
-            android:inputType="number"
-            android:textAlignment="4"
-            android:textColor="#ffffffff" />
-
-        <EditText
-            android:id="@+id/supply_red"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="#ffff0000"
-            android:hint="@string/supply_red"
-            android:inputType="number"
-            android:textColor="#ffffffff" />
-
-        <EditText
-            android:id="@+id/supply_blue"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="#ff0000ff"
-            android:hint="@string/supply_blue"
-            android:inputType="number"
-            android:textColor="#ffffffff" />
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:onClick="doRollout"
+            android:text="@string/button_estimate" />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="doRollout1"
             android:text="@string/button_roll" />
     </LinearLayout>
 
@@ -80,14 +61,13 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         tools:context=".MainActivity" >
-        
+
         <TextView
             android:id="@+id/rollout_results"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-        />
-        
+            android:textSize="24sp"
+            android:gravity="center"
+            android:layout_height="100dp" />
     </LinearLayout>
-        
-    
+
 </LinearLayout>

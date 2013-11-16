@@ -9,7 +9,8 @@
     <string name="supply_red">0</string>
     <string name="supply_blue">0</string>
     <string name="none">0</string>
-    <string name="button_roll">Rollout</string>
+    <string name="button_estimate">Estimate</string>
+    <string name="button_roll">Roll</string>
     <string name="title_activity_rollout">RolloutActivity</string>
 
 </resources>

@@ -12,30 +12,31 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
 
 	Random random = new Random(new Date().getTime());
 	
-    private List<GameObject> craftcard_die;    // list of craft card requirements
-    private List<String>     craftcard_tools;  // list of tools to manipulate craftcard_die
-    private Integer selected_craft_pos = null;
-    private CraftDieAdapter ccd_adapter;
+    private List<GameObject>  craftcard_die;    // list of craft card requirements
+    private List<String>      craftcard_tools;  // list of tools to manipulate craftcard_die
+    private Integer           selected_craft_pos = null;
+    private CraftDieAdapter   ccd_adapter;
     private CraftToolsAdapter cct_adapter;
+    
+    private List<GameObject>  supply_die;      // list of supply die available
+    private List<String>      supply_tools;    // list of tools to manipulate suply_die
+    private Integer           selected_supply_pos = null;
+    private CraftDieAdapter   supply_adapter;  // for now can just use the same adapter class
+    private CraftToolsAdapter supplyT_adapter; //   " 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        EditText editText;
-        editText = (EditText) findViewById(R.id.supply_black); editText.setText("3");
-        editText = (EditText) findViewById(R.id.supply_green); editText.setText("3");
-        editText = (EditText) findViewById(R.id.supply_red  ); editText.setText("3");
-        editText = (EditText) findViewById(R.id.supply_blue ); editText.setText("3");
 
         craftcard_die = new ArrayList<GameObject>();
     	craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
@@ -60,12 +61,47 @@ public class MainActivity extends Activity {
         cct_gv.setAdapter(cct_adapter);
         cct_gv.setOnItemClickListener(new OnItemClickListener() {
         	public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
-                //Toast.makeText(MainActivity.this, "" + pos, Toast.LENGTH_SHORT).show();
         		onCraftcardToolsClick(pos);
         	}
         });
 
+        supply_die = new ArrayList<GameObject>();
+    	supply_die.add(new GameObject(3, GameObject.GOColor.BLACK));
+    	supply_die.add(new GameObject(3, GameObject.GOColor.GREEN));
+    	supply_die.add(new GameObject(3, GameObject.GOColor.RED  ));
+    	supply_die.add(new GameObject(3, GameObject.GOColor.BLUE ));
+    	for (GameObject go : supply_die) { go.setMin(0); go.setMax(50); }
+        GridView supply_gv = (GridView) findViewById(R.id.supply_grid);
+        supply_adapter = new CraftDieAdapter(this, supply_die, selected_supply_pos); // TODO CraftDie?
+        supply_gv.setAdapter(supply_adapter);
+        supply_gv.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
+            	onSupplyDieClick(pos);
+            }
+        });
         
+        supply_tools = new ArrayList<String>();
+        supply_tools.add(new String("+"));
+        supply_tools.add(new String("-"));
+        supply_tools.add(new String("X"));
+        supply_tools.add(new String("+1"));
+        supply_tools.add(new String("+1 (3)"));
+        supply_tools.add(new String("+2"));
+        supply_tools.add(new String("1->6"));
+        supply_tools.add(new String("auto6"));
+        supply_tools.add(new String("reroll"));
+        supply_tools.add(new String("white die"));
+        GridView supplyT_gv = (GridView) findViewById(R.id.supply_tools);
+        supplyT_adapter = new CraftToolsAdapter(this, supply_tools);
+        supplyT_gv.setAdapter(supplyT_adapter);
+        supplyT_gv.setOnItemClickListener(new OnItemClickListener() {
+        	public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
+        		onSupplyToolsClick(pos);
+        	}
+        });
+        
+        
+
     }
     
     private void onCraftcardDieClick(int pos) {
@@ -87,7 +123,29 @@ public class MainActivity extends Activity {
     	// TODO: currently inconsistent on who is responsible to call this
     	ccd_adapter.notifyDataSetChanged();
     }
+  
+    private void onSupplyDieClick(int pos) {
+    	if (selected_supply_pos != null && selected_supply_pos == pos) {
+    		selected_supply_pos = null;  // unselect
+    	} else {
+		    selected_supply_pos = pos;
+    	}
+    	supply_adapter.setSelectedPos(selected_supply_pos);
+    }
+   
+    private void onSupplyToolsClick(int pos) {
+    	if (selected_supply_pos == null) { return; }  // TODO: Eventually there are add tools we need to handle here
+    	GameObject go = supply_die.get(selected_supply_pos);
+    	String str = supply_tools.get(pos).toString();
+    	if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
+    	else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
+    	else if ("X".equals(str)) { go.setValue(0);                 }
+    	// TODO: currently inconsistent on who is responsible to call this
+    	supply_adapter.notifyDataSetChanged();
+    }
+  
 
+ 
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -96,78 +154,74 @@ public class MainActivity extends Activity {
         return true;
     }
     
+    // TODO: Eventually this will be a separate thing that nicely displays your one roll result
+    public void doRollout1(View view) {
+    	doRollout(view, 1);
+    }
+
     public void doRollout(View view) {
+    	doRollout(view, 10000);
+    }
+        
+    public void doRollout(View view, int totalRolls) {
         // for now store supply list in array -- should be a hash with the colors as keys
     	List<Integer> supplyList = new ArrayList<Integer>();
     	// should be a hash of arrays -- colors as keys
     	List<Integer> blackNeeded = new ArrayList<Integer>();
     	List<Integer> greenNeeded = new ArrayList<Integer>();
 
-    	EditText editText;
-		String result = "";
+    	String result = "";
     	double successes = 0;
-    	int totalRolls = 10000;  
     	boolean haveEnoughDice = true;
 
-
     	// get craft requirements out of the widgets
-    	try {
-    		for (GameObject go : craftcard_die) {
-    			switch (go.getColor()) {
-    			case BLACK: blackNeeded.add(go.getValue()); break;
-    			case GREEN: greenNeeded.add(go.getValue()); break;
-    			default: break;	// TODO: add other colors
+    	for (GameObject go : craftcard_die) {
+    		switch (go.getColor()) {
+    		case BLACK: blackNeeded.add(go.getValue()); break;
+    		case GREEN: greenNeeded.add(go.getValue()); break;
+    		default: break;	// TODO: add other colors
+    		}
+    	}
+
+        // the supply_die list is in the same order as supplyList 
+    	for (GameObject go : supply_die) {
+    		supplyList.add(go.getValue());
+    	}
+    	
+    	Collections.sort(blackNeeded);
+    	Collections.sort(greenNeeded);
+    	Collections.reverse(blackNeeded);
+    	Collections.reverse(greenNeeded);
+
+    	if (blackNeeded.size() > supplyList.get(0)) {
+    		haveEnoughDice = false;
+    	}
+    	if (greenNeeded.size() > supplyList.get(1)) {
+    		haveEnoughDice = false;
+    	}
+    	if (haveEnoughDice) {
+    		for (int x = 0; x < totalRolls; x++) {
+    			List<Integer> blackRolls = roll(supplyList.get(0));
+    			boolean blackSuccess = checkSuccess(blackRolls, blackNeeded);
+
+    			if (!blackSuccess) {
+    				continue;
     			}
-    		}
 
-
-    		// get dice supply counts out of the widgets
-    		editText = (EditText) findViewById(R.id.supply_black);
-    		supplyList.add(Integer.parseInt(editText.getText().toString()));
-    		editText = (EditText) findViewById(R.id.supply_green);
-    		supplyList.add(Integer.parseInt(editText.getText().toString()));
-    		editText = (EditText) findViewById(R.id.supply_red);
-    		supplyList.add(Integer.parseInt(editText.getText().toString()));
-    		editText = (EditText) findViewById(R.id.supply_blue);
-    		supplyList.add(Integer.parseInt(editText.getText().toString()));
-
-    		Collections.sort(blackNeeded);
-    		Collections.sort(greenNeeded);
-    		Collections.reverse(blackNeeded);
-    		Collections.reverse(greenNeeded);
-
-    		if (blackNeeded.size() > supplyList.get(0)) {
-    			haveEnoughDice = false;
-    		}
-    		if (greenNeeded.size() > supplyList.get(1)) {
-    			haveEnoughDice = false;
-    		}
-    		if (haveEnoughDice) {
-    			for (int x = 0; x < totalRolls; x++) {
-    				List<Integer> blackRolls = roll(supplyList.get(0));
-    				boolean blackSuccess = checkSuccess(blackRolls, blackNeeded);
-
-    				if (!blackSuccess) {
-    					continue;
-    				}
-
-    				List<Integer> greenRolls = roll(supplyList.get(1));
-    				boolean greenSuccess = checkSuccess(greenRolls, greenNeeded);
-    				if (!greenSuccess) {
-    					continue;
-    				}
-
-    				successes++;
+    			List<Integer> greenRolls = roll(supplyList.get(1));
+    			boolean greenSuccess = checkSuccess(greenRolls, greenNeeded);
+    			if (!greenSuccess) {
+    				continue;
     			}
-    		}
-    	} catch (NumberFormatException e) {
-     	    result = "bad number";
-     	}
 
-		
-		TextView rolloutResults = (TextView) findViewById(R.id.rollout_results);
-		if (result == "") { 
-			if (!haveEnoughDice) {
+    			successes++;
+    		}
+    	}
+
+
+    	TextView rolloutResults = (TextView) findViewById(R.id.rollout_results);
+    	if (result == "") { 
+    		if (!haveEnoughDice) {
 				result = "Insufficient dice";
 			} else {
 				result = "Total successes: " + successes;
