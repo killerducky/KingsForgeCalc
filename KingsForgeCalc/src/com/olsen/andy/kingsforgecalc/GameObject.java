@@ -1,7 +1,7 @@
 package com.olsen.andy.kingsforgecalc;
 
 public class GameObject {
-	public enum GOColor { BLACK, GREEN, RED, BLUE, WHITE };
+	public enum GOColor { BLACK, GREEN, RED, BLUE };
 	
     private Integer value;
     private GOColor color;

@@ -182,9 +182,6 @@ public class MainActivity extends Activity {
     	supply_adapter.notifyDataSetChanged();
     }
 
-
-
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	// Inflate the menu; this adds items to the action bar if it is present.
@@ -202,15 +199,10 @@ public class MainActivity extends Activity {
     }
         
     public void doRollout(View view, int totalRolls) {
-        // for now store supply list in array -- should be a hash with the colors as keys
-    	List<Integer> supplyList = new ArrayList<Integer>();
-    	// should be a hash of arrays -- colors as keys
-    	List<Integer> blackNeeded = new ArrayList<Integer>();
-    	List<Integer> greenNeeded = new ArrayList<Integer>();
-
-    	HashMap<GameObject.GOColor, List<Integer>> needed = new HashMap<GameObject.GOColor, List<Integer>>();
+    	HashMap<GameObject.GOColor, Integer> supplyHashInt = new HashMap<GameObject.GOColor, Integer>();
+    	HashMap<GameObject.GOColor, List<Integer>> neededHashList = new HashMap<GameObject.GOColor, List<Integer>>();
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
-    		needed.put(color, new ArrayList<Integer>());
+    		neededHashList.put(color, new ArrayList<Integer>());
     	}
 
     	String result = "";
@@ -220,48 +212,40 @@ public class MainActivity extends Activity {
     	// get craft requirements out of the widgets
     	for (Object o : craftcard_die) {
     		GameObject go = (GameObject) o;
-    		needed.get(go.getColor()).add(go.getValue());
+    		neededHashList.get(go.getColor()).add(go.getValue());
     	}
 
-    	blackNeeded = needed.get(GameObject.GOColor.BLACK);
-    	greenNeeded = needed.get(GameObject.GOColor.GREEN);
-    	
         // TODO: hacky but the GameObjects in order are what we want
     	// The other objects are bonuses
     	for (Object o : supply_die) {
     		if (o instanceof GameObject) {
     			GameObject go = (GameObject) o;
-    			supplyList.add(go.getValue());
+    			supplyHashInt.put(go.getColor(), go.getValue());
     		}
     	}
+//    	supplyHashInt.put(GameObject.GOColor.WHITE, 0);  // TODO: Hack to workaround white.  Probably white should be a bonus string not a color.
     	
-    	Collections.sort(blackNeeded);
-    	Collections.sort(greenNeeded);
-    	Collections.reverse(blackNeeded);
-    	Collections.reverse(greenNeeded);
+    	for (GameObject.GOColor color : GameObject.GOColor.values()) {
+    		List<Integer> tmpList = new ArrayList<Integer>();
+    		if (neededHashList.get(color).size() > supplyHashInt.get(color)) {
+    			haveEnoughDice = false;
+    			break;
+    		}
+    		Collections.sort(neededHashList.get(color));
+    		Collections.reverse(neededHashList.get(color));
+    	}
 
-    	if (blackNeeded.size() > supplyList.get(0)) {
-    		haveEnoughDice = false;
-    	}
-    	if (greenNeeded.size() > supplyList.get(1)) {
-    		haveEnoughDice = false;
-    	}
     	if (haveEnoughDice) {
     		for (int x = 0; x < totalRolls; x++) {
-    			List<Integer> blackRolls = roll(supplyList.get(0));
-    			boolean blackSuccess = checkSuccess(blackRolls, blackNeeded);
-
-    			if (!blackSuccess) {
-    				continue;
+    			boolean success = true;
+    			for (GameObject.GOColor color : GameObject.GOColor.values()) {
+    				List<Integer> rolls = roll(supplyHashInt.get(color));
+    				if (!checkSuccess(rolls, neededHashList.get(color))) {
+    					success = false;
+    					continue;
+    				}
     			}
-
-    			List<Integer> greenRolls = roll(supplyList.get(1));
-    			boolean greenSuccess = checkSuccess(greenRolls, greenNeeded);
-    			if (!greenSuccess) {
-    				continue;
-    			}
-
-    			successes++;
+    			if (success) { successes++; }
     		}
     	}
 

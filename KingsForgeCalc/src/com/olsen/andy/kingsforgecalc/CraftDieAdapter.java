@@ -37,13 +37,13 @@ public class CraftDieAdapter extends ArrayAdapter<Object> {
 			case GREEN: tv.setBackgroundColor(Color.GREEN); break;
 			case RED  : tv.setBackgroundColor(Color.RED  ); break;
 			case BLUE : tv.setBackgroundColor(Color.BLUE ); break;
-			case WHITE: tv.setBackgroundColor(Color.WHITE); break;
+			//case WHITE: tv.setBackgroundColor(Color.WHITE); break;
 			}
 			if (selected_pos != null && pos == selected_pos) {
 				tv.setText(">" + go.getValue() + "<");
 			}
 			switch (go.getColor()) {
-			case WHITE: tv.setTextColor(Color.BLACK); break;
+			//case WHITE: tv.setTextColor(Color.BLACK); break;
 			default: tv.setTextColor(Color.WHITE);    break;
 			}
 			tv.setGravity(Gravity.CENTER);
