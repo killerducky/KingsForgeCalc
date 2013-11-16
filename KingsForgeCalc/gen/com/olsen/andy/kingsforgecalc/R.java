@@ -25,16 +25,17 @@ public final class R {
     }
     public static final class id {
         public static final int MainActivity=0x7f080000;
-        public static final int action_settings=0x7f08000a;
-        public static final int craft_black0=0x7f080001;
-        public static final int craft_black1=0x7f080002;
-        public static final int craft_green0=0x7f080003;
-        public static final int craft_green1=0x7f080004;
-        public static final int rollout_results=0x7f080009;
-        public static final int supply_black=0x7f080005;
-        public static final int supply_blue=0x7f080008;
-        public static final int supply_green=0x7f080006;
-        public static final int supply_red=0x7f080007;
+        public static final int action_settings=0x7f08000b;
+        public static final int craft_black0=0x7f080002;
+        public static final int craft_black1=0x7f080003;
+        public static final int craft_green0=0x7f080004;
+        public static final int craft_green1=0x7f080005;
+        public static final int craftcard_grid=0x7f080001;
+        public static final int rollout_results=0x7f08000a;
+        public static final int supply_black=0x7f080006;
+        public static final int supply_blue=0x7f080009;
+        public static final int supply_green=0x7f080007;
+        public static final int supply_red=0x7f080008;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;

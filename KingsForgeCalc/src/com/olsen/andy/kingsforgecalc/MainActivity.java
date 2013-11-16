@@ -10,8 +10,14 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 
 public class MainActivity extends Activity {
 
@@ -31,6 +37,20 @@ public class MainActivity extends Activity {
         editText = (EditText) findViewById(R.id.craft_black1); editText.setText("3");
         editText = (EditText) findViewById(R.id.craft_green0); editText.setText("3");
         editText = (EditText) findViewById(R.id.craft_green1); editText.setText("3");
+        
+        List<Integer> number_array = new ArrayList<Integer>();
+        for (int i=0; i<10; i++) {
+        	number_array.add(i);
+        }
+        GridView gridview = (GridView) findViewById(R.id.craftcard_grid);
+        CraftDieAdapter adapter = new CraftDieAdapter(this, number_array);
+        gridview.setAdapter(adapter);
+        gridview.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 
 
