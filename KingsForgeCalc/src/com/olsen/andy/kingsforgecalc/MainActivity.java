@@ -22,13 +22,11 @@ public class MainActivity extends Activity {
 	
     private List<GameObject>  craftcard_die;    // list of craft card requirements
     private List<String>      craftcard_tools;  // list of tools to manipulate craftcard_die
-    private Integer           selected_craft_pos = null;
     private CraftDieAdapter   ccd_adapter;
     private CraftToolsAdapter cct_adapter;
     
     private List<GameObject>  supply_die;      // list of supply die available
     private List<String>      supply_tools;    // list of tools to manipulate suply_die
-    private Integer           selected_supply_pos = null;
     private CraftDieAdapter   supply_adapter;  // for now can just use the same adapter class
     private CraftToolsAdapter supplyT_adapter; //   " 
 
@@ -43,7 +41,7 @@ public class MainActivity extends Activity {
     	craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN));
     	craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN));
         GridView ccd_gv = (GridView) findViewById(R.id.craftcard_grid);
-        ccd_adapter = new CraftDieAdapter(this, craftcard_die, selected_craft_pos);
+        ccd_adapter = new CraftDieAdapter(this, craftcard_die, null);
         ccd_gv.setAdapter(ccd_adapter);
         ccd_gv.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
@@ -75,7 +73,7 @@ public class MainActivity extends Activity {
     	supply_die.add(new GameObject(3, GameObject.GOColor.BLUE ));
     	for (GameObject go : supply_die) { go.setMin(0); go.setMax(50); }
         GridView supply_gv = (GridView) findViewById(R.id.supply_grid);
-        supply_adapter = new CraftDieAdapter(this, supply_die, selected_supply_pos); // TODO CraftDie?
+        supply_adapter = new CraftDieAdapter(this, supply_die, null); // TODO CraftDie?
         supply_gv.setAdapter(supply_adapter);
         supply_gv.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
@@ -106,44 +104,38 @@ public class MainActivity extends Activity {
     }
     
     private void onCraftcardDieClick(int pos) {
-    	if (selected_craft_pos != null && selected_craft_pos == pos) {
-    		selected_craft_pos = null;  // unselect
+    	if (ccd_adapter.getSelectedPos() != null && ccd_adapter.getSelectedPos() == pos) {
+    		ccd_adapter.setSelectedPos(null);  // unselect
     	} else {
-		    selected_craft_pos = pos;
+		    ccd_adapter.setSelectedPos(pos);
     	}
-    	ccd_adapter.setSelectedPos(selected_craft_pos);
     }
 
     private void onCraftcardToolsClick(int pos) {
     	String str = craftcard_tools.get(pos).toString();
 
-    	if (selected_craft_pos != null) {
-        	GameObject go = craftcard_die.get(selected_craft_pos);
+    	if (ccd_adapter.getSelectedPos() != null) {
+        	GameObject go = craftcard_die.get((int) ccd_adapter.getSelectedPos());
     		if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
     		else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
     		else if ("X".equals(str)) { 
-    			craftcard_die.remove((int) selected_craft_pos);  // XXX: omg Integer objects mess things up here, cast to int
+    			craftcard_die.remove((int) ccd_adapter.getSelectedPos());  // XXX: omg Integer objects mess things up here, cast to int
     			if (craftcard_die.size()==0) {
-    				selected_craft_pos = null;
-        			ccd_adapter.setSelectedPos(selected_craft_pos);  // FIXME there are two copies of this variable -- bad!
-    			} else if (selected_craft_pos >= craftcard_die.size()) { 
-    				selected_craft_pos = craftcard_die.size()-1;
-        			ccd_adapter.setSelectedPos(selected_craft_pos);  // FIXME there are two copies of this variable -- bad!
+    				ccd_adapter.setSelectedPos(null);
+    			} else if (ccd_adapter.getSelectedPos() >= craftcard_die.size()) { 
+    				ccd_adapter.setSelectedPos(craftcard_die.size()-1);
     			}
     		}
     	}
     	if ("Black".equals(str)) { 
     		craftcard_die.add(new GameObject(1, GameObject.GOColor.BLACK)); 
-    		//selected_craft_pos = craftcard_die.size()-1;
+    		ccd_adapter.setSelectedPos(craftcard_die.size()-1);
     	} else if ("Green".equals(str)) { 
     		craftcard_die.add(new GameObject(1, GameObject.GOColor.GREEN)); 
-    		//selected_craft_pos = craftcard_die.size()-1;
     	} else if ("Red".equals(str)) { 
     		craftcard_die.add(new GameObject(1, GameObject.GOColor.RED)); 
-    		//selected_craft_pos = craftcard_die.size()-1;
     	} else if ("Blue".equals(str)) { 
     		craftcard_die.add(new GameObject(1, GameObject.GOColor.BLUE)); 
-    		//selected_craft_pos = craftcard_die.size()-1;
     	}
 
     	// TODO: currently inconsistent on who is responsible to call this
@@ -151,17 +143,16 @@ public class MainActivity extends Activity {
     }
 
     private void onSupplyDieClick(int pos) {
-    	if (selected_supply_pos != null && selected_supply_pos == pos) {
-    		selected_supply_pos = null;  // unselect
+    	if (supply_adapter.getSelectedPos() != null && supply_adapter.getSelectedPos() == pos) {
+    		supply_adapter.setSelectedPos(null);  // unselect
     	} else {
-		    selected_supply_pos = pos;
+		    supply_adapter.setSelectedPos(pos);
     	}
-    	supply_adapter.setSelectedPos(selected_supply_pos);
     }
    
     private void onSupplyToolsClick(int pos) {
-    	if (selected_supply_pos == null) { return; }  // TODO: Eventually there are add tools we need to handle here
-    	GameObject go = supply_die.get(selected_supply_pos);
+    	if (supply_adapter.getSelectedPos() == null) { return; }  // TODO: Eventually there are add tools we need to handle here
+    	GameObject go = supply_die.get(supply_adapter.getSelectedPos()); // FIXME:  cast to int?
     	String str = supply_tools.get(pos).toString();
     	if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
     	else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }

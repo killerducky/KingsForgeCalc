@@ -23,6 +23,9 @@ public class CraftDieAdapter extends ArrayAdapter<GameObject> {
 		this.selected_pos = selected_pos;
 		this.notifyDataSetChanged();
 	}
+	public Integer getSelectedPos() {
+		return this.selected_pos;
+	}
 
 	public View getView(int pos, View convertView, ViewGroup parent) {
 		TextView tv = (TextView) super.getView(pos, convertView, parent);
@@ -35,7 +38,7 @@ public class CraftDieAdapter extends ArrayAdapter<GameObject> {
 		case WHITE: tv.setBackgroundColor(Color.WHITE); break;
 		}
 		if (selected_pos != null && pos == selected_pos) {
-			tv.setBackgroundColor(Color.CYAN); // TODO improve this
+			tv.setText(">" + go.getValue() + "<");
 		}
 		switch (go.getColor()) {
 		case WHITE: tv.setTextColor(Color.BLACK); break;
