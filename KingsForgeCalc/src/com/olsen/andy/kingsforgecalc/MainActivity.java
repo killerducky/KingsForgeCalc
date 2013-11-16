@@ -15,15 +15,17 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
 
 	Random random = new Random(new Date().getTime());
 	
-    private List<GameObject> craftcard_die;  // list of craft card requirements
-
+    private List<GameObject> craftcard_die;    // list of craft card requirements
+    private List<String>     craftcard_tools;  // list of tools to manipulate craftcard_die
+    private Integer selected_craft_pos = null;
+    private CraftDieAdapter ccd_adapter;
+    private CraftToolsAdapter cct_adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,26 +38,54 @@ public class MainActivity extends Activity {
         editText = (EditText) findViewById(R.id.supply_blue ); editText.setText("3");
 
         craftcard_die = new ArrayList<GameObject>();
-        /*
-        for (int i=0; i<2; i++) {
-        	for (GameObject.GOColor color : GameObject.GOColor.values()) {
-      			craftcard_die.add(new GameObject(i, color));
-        	}
-        }
-        */
     	craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
     	craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
     	craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN));
     	craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN));
-        GridView gridview = (GridView) findViewById(R.id.craftcard_grid);
-        CraftDieAdapter adapter = new CraftDieAdapter(this, craftcard_die);
-        gridview.setAdapter(adapter);
-        gridview.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                Toast.makeText(MainActivity.this, "" + position, Toast.LENGTH_SHORT).show();
+        GridView ccd_gv = (GridView) findViewById(R.id.craftcard_grid);
+        ccd_adapter = new CraftDieAdapter(this, craftcard_die, selected_craft_pos);
+        ccd_gv.setAdapter(ccd_adapter);
+        ccd_gv.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
+            	onCraftcardDieClick(pos);
             }
         });
+        
+        craftcard_tools = new ArrayList<String>();
+        craftcard_tools.add(new String("+"));
+        craftcard_tools.add(new String("-"));
+        craftcard_tools.add(new String("X"));
+        GridView cct_gv = (GridView) findViewById(R.id.craftcard_tools);
+        cct_adapter = new CraftToolsAdapter(this, craftcard_tools);
+        cct_gv.setAdapter(cct_adapter);
+        cct_gv.setOnItemClickListener(new OnItemClickListener() {
+        	public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
+                //Toast.makeText(MainActivity.this, "" + pos, Toast.LENGTH_SHORT).show();
+        		onCraftcardToolsClick(pos);
+        	}
+        });
 
+        
+    }
+    
+    private void onCraftcardDieClick(int pos) {
+    	if (selected_craft_pos != null && selected_craft_pos == pos) {
+    		selected_craft_pos = null;  // unselect
+    	} else {
+		    selected_craft_pos = pos;
+    	}
+    	ccd_adapter.setSelectedPos(selected_craft_pos);
+    }
+    
+    private void onCraftcardToolsClick(int pos) {
+    	if (selected_craft_pos == null) { return; }  // TODO: Eventually there are add tools we need to handle here
+    	GameObject go = craftcard_die.get(selected_craft_pos);
+    	String str = craftcard_tools.get(pos).toString();
+    	if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
+    	else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
+    	else if ("X".equals(str)) {         } // TODO: implement this
+    	// TODO: currently inconsistent on who is responsible to call this
+    	ccd_adapter.notifyDataSetChanged();
     }
 
 

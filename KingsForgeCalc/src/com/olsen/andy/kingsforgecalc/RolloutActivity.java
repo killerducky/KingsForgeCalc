@@ -9,6 +9,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+
+// TODO: this is all dead code now
+
 public class RolloutActivity extends Activity {
 
 	@Override

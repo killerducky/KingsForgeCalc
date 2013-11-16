@@ -12,8 +12,16 @@ import android.widget.TextView;
 
 public class CraftDieAdapter extends ArrayAdapter<GameObject> {
 
-	public CraftDieAdapter(Context context, List<GameObject> objects) {
+	private Integer selected_pos;
+	
+	public CraftDieAdapter(Context context, List<GameObject> objects, Integer selected_pos) {
 		super(context, android.R.layout.simple_list_item_1, objects);
+		this.selected_pos = selected_pos;
+	}
+	
+	public void setSelectedPos(Integer selected_pos) {
+		this.selected_pos = selected_pos;
+		this.notifyDataSetChanged();
 	}
 
 	public View getView(int pos, View convertView, ViewGroup parent) {
@@ -25,6 +33,9 @@ public class CraftDieAdapter extends ArrayAdapter<GameObject> {
 		case RED  : tv.setBackgroundColor(Color.RED  ); break;
 		case BLUE : tv.setBackgroundColor(Color.BLUE ); break;
 		case WHITE: tv.setBackgroundColor(Color.WHITE); break;
+		}
+		if (selected_pos != null && pos == selected_pos) {
+			tv.setBackgroundColor(Color.CYAN); // TODO improve this
 		}
 		switch (go.getColor()) {
 		case WHITE: tv.setTextColor(Color.BLACK); break;

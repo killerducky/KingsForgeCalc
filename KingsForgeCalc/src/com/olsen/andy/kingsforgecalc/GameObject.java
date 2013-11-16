@@ -7,14 +7,20 @@ public class GameObject {
     private GOColor color;
     
     public GameObject(Integer value, GOColor color) {
-    	this.value = value;
-    	this.color = color;
+    	setValue(value);
+    	setColor(color);
     }
     
     public String toString() {
     	return String.format("%d", value);
     }
     
+    public void setValue(Integer value) { 
+    	if (value < 1) { value = 1; }
+    	if (value > 6) { value = 6; }
+    	this.value = value;
+    }
+    public void setColor(GOColor color) { this.color = color; }
     public Integer getValue() { return value; }
     public GOColor getColor() { return color; }
 }
