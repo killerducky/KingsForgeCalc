@@ -8,7 +8,7 @@
     <TextView
         android:text="Craft Card"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:textSize="20sp"
         android:gravity="bottom|center_horizontal"
     />
@@ -39,7 +39,7 @@
     <TextView
         android:text="Supply"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:textSize="20sp"
         android:gravity="center"
     />
@@ -95,7 +95,7 @@
         <TextView
             android:id="@+id/rollout_results"
             android:layout_width="match_parent"
-            android:textSize="22sp"
+            android:textSize="20sp"
             android:gravity="center"
             android:layout_height="90dp" />
     </LinearLayout>

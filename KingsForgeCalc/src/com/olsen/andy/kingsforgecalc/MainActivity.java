@@ -204,7 +204,8 @@ public class MainActivity extends Activity {
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
     		neededHashList.put(color, new ArrayList<Integer>());
     	}
-
+    	List<GameBonus> bonus_list = new ArrayList<GameBonus>();
+    	
     	String result = "";
     	double successes = 0;
     	boolean haveEnoughDice = true;
@@ -215,18 +216,19 @@ public class MainActivity extends Activity {
     		neededHashList.get(go.getColor()).add(go.getValue());
     	}
 
-        // TODO: hacky but the GameObjects in order are what we want
-    	// The other objects are bonuses
+        // TODO: hacky but the GameObjects are the dice
+    	// The other string objects are bonuses
     	for (Object o : supply_die) {
     		if (o instanceof GameObject) {
     			GameObject go = (GameObject) o;
     			supplyHashInt.put(go.getColor(), go.getValue());
+    		} else {
+    			GameBonus gb = new GameBonus(o.toString());  // here "o" is actually a string object.
+    			bonus_list.add(gb);
     		}
     	}
-//    	supplyHashInt.put(GameObject.GOColor.WHITE, 0);  // TODO: Hack to workaround white.  Probably white should be a bonus string not a color.
     	
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
-    		List<Integer> tmpList = new ArrayList<Integer>();
     		if (neededHashList.get(color).size() > supplyHashInt.get(color)) {
     			haveEnoughDice = false;
     			break;
@@ -240,7 +242,7 @@ public class MainActivity extends Activity {
     			boolean success = true;
     			for (GameObject.GOColor color : GameObject.GOColor.values()) {
     				List<Integer> rolls = roll(supplyHashInt.get(color));
-    				if (!checkSuccess(rolls, neededHashList.get(color))) {
+    				if (!checkSuccess(rolls, neededHashList.get(color), bonus_list)) {
     					success = false;
     					continue;
     				}
@@ -249,6 +251,7 @@ public class MainActivity extends Activity {
     		}
     	}
 
+    	
 
     	TextView rolloutResults = (TextView) findViewById(R.id.rollout_results);
     	if (result == "") { 
@@ -266,15 +269,31 @@ public class MainActivity extends Activity {
 		
     }
 
-    private boolean checkSuccess(List<Integer> rolled, List<Integer> needed) {
+    private boolean checkSuccess(List<Integer> rolled, List<Integer> needed, List<GameBonus> game_bonus) {
         int x = 0;
+        Integer thisRolled;
         for (Integer need : needed) {
-            // Is this oversimplifying?
-            if (rolled.get(x++) < need) {
-                return false;
+        	thisRolled = rolled.get(x++);
+            if (thisRolled < need) {
+            	if (!applyCheapestBonus(thisRolled, need, game_bonus)) {
+            		return false;
+            	}
             }
         }
         return true;
+    }
+    
+    private boolean applyCheapestBonus(Integer rolled, Integer needed, List<GameBonus> game_bonus) {
+        if (true) {return false;} // FIXME:  Just skip this for now so I can checkin and test crlf stuff
+    	for (GameBonus gb : game_bonus) {
+        	// FIXME: For now just check that is isn't used
+        	// if not, apply and declare success!
+        	if (!gb.allUsed()) {
+        		gb.addTarget(new GameObject(rolled, GameObject.GOColor.BLACK)); // FIXME I should point to the original GameObject
+        		return true;
+        	}
+        }
+        return false; // could not find a bonus that works
     }
   
     private List<Integer> roll(int amountToRoll) {
