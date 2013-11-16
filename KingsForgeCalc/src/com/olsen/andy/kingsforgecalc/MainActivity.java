@@ -123,21 +123,26 @@ public class MainActivity extends Activity {
     		else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
     		else if ("X".equals(str)) { 
     			craftcard_die.remove((int) selected_craft_pos);  // XXX: omg Integer objects mess things up here, cast to int
-    			selected_craft_pos = null;
-    			ccd_adapter.setSelectedPos(selected_craft_pos);  // FIXME there are two copies of this variable -- bad!
+    			if (craftcard_die.size()==0) {
+    				selected_craft_pos = null;
+        			ccd_adapter.setSelectedPos(selected_craft_pos);  // FIXME there are two copies of this variable -- bad!
+    			} else if (selected_craft_pos >= craftcard_die.size()) { 
+    				selected_craft_pos = craftcard_die.size()-1;
+        			ccd_adapter.setSelectedPos(selected_craft_pos);  // FIXME there are two copies of this variable -- bad!
+    			}
     		}
     	}
     	if ("Black".equals(str)) { 
-    		craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK)); 
+    		craftcard_die.add(new GameObject(1, GameObject.GOColor.BLACK)); 
     		//selected_craft_pos = craftcard_die.size()-1;
     	} else if ("Green".equals(str)) { 
-    		craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN)); 
+    		craftcard_die.add(new GameObject(1, GameObject.GOColor.GREEN)); 
     		//selected_craft_pos = craftcard_die.size()-1;
     	} else if ("Red".equals(str)) { 
-    		craftcard_die.add(new GameObject(4, GameObject.GOColor.RED)); 
+    		craftcard_die.add(new GameObject(1, GameObject.GOColor.RED)); 
     		//selected_craft_pos = craftcard_die.size()-1;
     	} else if ("Blue".equals(str)) { 
-    		craftcard_die.add(new GameObject(4, GameObject.GOColor.BLUE)); 
+    		craftcard_die.add(new GameObject(1, GameObject.GOColor.BLUE)); 
     		//selected_craft_pos = craftcard_die.size()-1;
     	}
 
