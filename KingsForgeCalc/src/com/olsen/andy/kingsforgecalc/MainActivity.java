@@ -103,8 +103,6 @@ public class MainActivity extends Activity {
         	}
         });
         
-        
-
     }
     
     private void onCraftcardDieClick(int pos) {
@@ -126,6 +124,7 @@ public class MainActivity extends Activity {
     		else if ("X".equals(str)) { 
     			craftcard_die.remove((int) selected_craft_pos);  // XXX: omg Integer objects mess things up here, cast to int
     			selected_craft_pos = null;
+    			ccd_adapter.setSelectedPos(selected_craft_pos);  // FIXME there are two copies of this variable -- bad!
     		}
     	}
     	if ("Black".equals(str)) { 
