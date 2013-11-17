@@ -10,8 +10,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-public class CraftToolsAdapter extends ArrayAdapter<String> {
-	public CraftToolsAdapter(Context context, List<String> objects) {
+public class CraftToolsAdapter extends ArrayAdapter<Object> {
+	public CraftToolsAdapter(Context context, List<Object> objects) {
 		super(context, android.R.layout.simple_list_item_1, objects);
 	}
 	

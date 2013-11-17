@@ -16,7 +16,7 @@ public class GameObject {
     }
     
     public String toString() {
-    	return String.format("%d", value);
+    	return value.toString();
     }
     
     public void setValue(Integer value) { 

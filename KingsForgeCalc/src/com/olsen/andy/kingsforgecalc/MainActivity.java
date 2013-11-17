@@ -1,7 +1,6 @@
 package com.olsen.andy.kingsforgecalc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,17 +24,15 @@ public class MainActivity extends Activity {
 	Random random = new Random(new Date().getTime());
 	
     private List<Object>      craftcard_die;    // list of craft card requirements
-    private List<String>      craftcard_tools;  // list of tools to manipulate craftcard_die
+    private List<Object>      craftcard_tools;  // list of tools to manipulate craftcard_die
     private CraftDieAdapter   ccd_adapter;
     private CraftToolsAdapter cct_adapter;
     
     private List<Object>      supply_die;      // list of supply die available
-    private List<String>      supply_tools;    // list of tools to manipulate suply_die
+    private List<Object>      supply_tools;    // list of tools to manipulate suply_die
     private CraftDieAdapter   supply_adapter;  // for now can just use the same adapter class
     private CraftToolsAdapter supplyT_adapter; //   "
     
-    public List<String> bonuses = Arrays.asList("+1", "+1 (3)", "+2", "1->6", "auto6", "reroll", "white die");
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,7 +52,7 @@ public class MainActivity extends Activity {
             }
         });
         
-        craftcard_tools = new ArrayList<String>();
+        craftcard_tools = new ArrayList<Object>();
         craftcard_tools.add(new String("+"));
         craftcard_tools.add(new String("-"));
         craftcard_tools.add(new String("X"));
@@ -87,12 +84,12 @@ public class MainActivity extends Activity {
             }
         });
         
-        supply_tools = new ArrayList<String>();
+        supply_tools = new ArrayList<Object>();
         supply_tools.add(new String("+"));
         supply_tools.add(new String("-"));
         supply_tools.add(new String("X"));
-        for (String bonus : bonuses) {
-            supply_tools.add(bonus);
+        for (GameBonus.Bonus bonus : GameBonus.Bonus.values()) {
+            supply_tools.add(new GameBonus(bonus));
         }
         GridView supplyT_gv = (GridView) findViewById(R.id.supply_tools);
         supplyT_adapter = new CraftToolsAdapter(this, supply_tools);
@@ -156,17 +153,17 @@ public class MainActivity extends Activity {
     }
 
     private void onSupplyToolsClick(int pos) {
-    	String str = supply_tools.get(pos).toString();
+    	Object clickedO = supply_tools.get(pos);
     	if (supply_adapter.getSelectedPos() != null) { 
-    		Object o = supply_die.get(supply_adapter.getSelectedPos());
-    		if (o instanceof GameObject) {
-    			GameObject go = (GameObject) o;
-    			if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
-    			else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
-    			else if ("X".equals(str)) { go.setValue(0);                 }
+    		Object selectedO = supply_die.get(supply_adapter.getSelectedPos());
+    		if (selectedO instanceof GameObject) {
+    			GameObject go = (GameObject) selectedO;
+    			if      ("+".equals(clickedO.toString())) { go.setValue(go.getValue() + 1); }
+    			else if ("-".equals(clickedO.toString())) { go.setValue(go.getValue() - 1); }
+    			else if ("X".equals(clickedO.toString())) { go.setValue(0);                 }
     		} else {
                 // Handle bonuses, which right now are just strings
-                if ("X".equals(str)) {  
+                if ("X".equals(clickedO.toString())) {  
         			supply_die.remove((int) supply_adapter.getSelectedPos());  // XXX: omg Integer objects mess things up here, cast to int
         			if (supply_die.size()==0) {
         				supply_adapter.setSelectedPos(null); // XXX: Actually this is impossible, cannot delete the 4 colors
@@ -176,8 +173,8 @@ public class MainActivity extends Activity {
                 }
     		}
     	}
-    	if (bonuses.contains(str)) {
-    		supply_die.add(new String(str)); 
+    	if (clickedO instanceof GameBonus) {
+    		supply_die.add(new GameBonus((GameBonus) clickedO));  // copy and add
     		supply_adapter.setSelectedPos(null);
     	}
     	// TODO: currently inconsistent on who is responsible to call this
@@ -221,8 +218,7 @@ public class MainActivity extends Activity {
     			GameObject go = (GameObject) o;
     			supplyHashInt.put(go.getColor(), go.getValue());
     		} else {
-    			GameBonus gb = new GameBonus(o.toString());  // here "o" is actually a string object.
-    			bonusList.add(gb);
+    			bonusList.add((GameBonus) o);
     		}
     	}
     	
