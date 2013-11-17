@@ -1,6 +1,7 @@
 package com.olsen.andy.kingsforgecalc;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -29,9 +30,10 @@ public class Rollout {
     			break;
     		}
     	}
+    	
 		if (haveEnoughDice) {
 			for (int x = 0; x < totalRolls; x++) {
-				log_enable = x==0;
+				log_enable = x==0; // only log the first run
 				if (log_enable) { log += "Bonuses:"; } 
 				for (GameBonus bonus : bonusList) { 
 					if (log_enable) { log += " " + bonus.toString(); }
@@ -97,34 +99,64 @@ public class Rollout {
             }
         }
         return true;
-    }
-    
-    // TODO: handle applying multiple bonuses to the same die
-    private boolean applyCheapestBonus(Integer rolled, Integer needed, List<GameBonus> bonusList) {
-    	Integer lowestCost = Integer.MAX_VALUE;
-    	GameBonus currentUsedGb = null;
-    	for (GameBonus gb : bonusList) {
-        	if (!gb.allUsed()) {
-        		if (gb.applyBonus(rolled) >= needed) {
-        			if (gb.cost() < lowestCost ) {
-        				lowestCost = gb.cost();
-        				if (currentUsedGb != null) {
-        					// we found a cheaper bonus, so reset the old one to be unused
-        					currentUsedGb.resetAssignmentsDoNotReroll();
-        				}
-        				currentUsedGb = gb;
-                		gb.addTarget(new GameObject(rolled, GameObject.GOColor.BLACK)); // FIXME I should point to the original GameObject
-        			}
-        		}
-        	}
-        }
-    	if (currentUsedGb != null) {
-    		if (log_enable) { log += "use " + currentUsedGb.toString(); }
-    	}
-    	return (currentUsedGb != null);  // if we succeeded this will have a value
-    }
-  
-    private List<Integer> roll(int amountToRoll) {
+	}
+
+	// TODO: handle applying multiple bonuses to the same die
+	private boolean applyCheapestBonus(Integer rolled, Integer needed, List<GameBonus> bonusList) {
+		Integer lowestCost = Integer.MAX_VALUE;
+		List<GameBonus> currentUsedGbList = null;
+		for (int i=0; i < bonusList.size(); i++) {
+			if (i==1) {
+				break;  // while debugging only go up to 1
+			}
+			// for now just create a "list" of one bonus item to try
+			for (GameBonus bonus : bonusList) {
+				List<GameBonus> perm = new ArrayList<GameBonus>();
+				perm.add(bonus);
+				Integer afterBonus = rolled;
+				Integer totalCost  = 0;
+				// loop over all these bonuses and apply them, keeping running total afterBonus and cost
+				for (GameBonus gb : perm) {
+					if (!gb.allUsed()) {
+						afterBonus = gb.applyBonus(afterBonus);
+						totalCost += gb.cost();
+					}
+				}
+				if (afterBonus >= needed) {
+					if (totalCost < lowestCost) {
+						if (currentUsedGbList != null) {
+							// we found a cheaper bonus combination, so reset the old one to be unused
+							for (GameBonus gb : currentUsedGbList) { gb.resetAssignmentsDoNotReroll(); }
+						}
+						currentUsedGbList = perm;
+						for (GameBonus gb : currentUsedGbList) {
+							gb.addTarget(new GameObject(rolled, GameObject.GOColor.BLACK)); // FIXME I should point to the original GameObject
+						}
+					}
+				}
+			}
+		}
+		if (currentUsedGbList != null) {
+			if (log_enable) { 
+				log += "use:";
+				for (GameBonus gb : currentUsedGbList ) {
+					log += " " + gb.toString();
+				}
+			}
+		}
+		return (currentUsedGbList != null);  // if we succeeded this will have a value
+	}
+
+//	private List<GameBonus> combinationIterator(Integer numItems, List<Integer> state, List<GameBonus> bonusList) {
+//        if (state.size() != numItems) {
+//        	state.add(0);
+//        }
+//		while (state.size() < numItems) {
+//			state.add(0);
+//		}
+//	}
+	
+	private List<Integer> roll(int amountToRoll) {
         List<Integer> rolls = new ArrayList<Integer>();
         for (int x = 0; x < amountToRoll; x++) {
             rolls.add(Math.abs(random.nextInt() % 6) + 1);
