@@ -185,8 +185,7 @@ public class Rollout {
 	private List<Integer> roll(int amountToRoll) {
         List<Integer> rolls = new ArrayList<Integer>();
         for (int x = 0; x < amountToRoll; x++) {
-//            rolls.add(Math.abs(random.nextInt() % 6) + 1);
-            rolls.add(1); // FIXME !!! test
+            rolls.add(Math.abs(random.nextInt() % 6) + 1);
         }
         return rolls;
     }
