@@ -51,6 +51,8 @@ public class CraftDieAdapter extends ArrayAdapter<Object> {
 			if (selected_pos != null && pos == selected_pos) {
 				tv.setText(">" + o.toString() + "<");
 			}
+			tv.setTextColor(Color.WHITE);
+			tv.setBackgroundColor(Color.DKGRAY);
 		}
 		return tv;
 	}

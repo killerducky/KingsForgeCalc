@@ -21,6 +21,8 @@ public class Rollout {
 	List<GameBonus> currentUsedGbList;
 	List<Integer>   picked;
 	List<GameBonus> pickedList;
+	
+	private static final int MAX_BONUSES_PER_DIE = 6; // it takes 6 +1 bonuses to make a 1 into a 7 and break a tie with a 6
 
     
 	public HashMap<String, String> doRollout(
@@ -103,8 +105,8 @@ public class Rollout {
 		this.lowestCost = Integer.MAX_VALUE;
 		this.currentUsedGbList = null;
 		for (int targetDepth=1; targetDepth <= bonusList.size(); targetDepth++) {
-			if (targetDepth>1) {
-				break;  // FIXME while debugging only go up to 1
+			if (targetDepth>MAX_BONUSES_PER_DIE) {
+				break;  // FIXME while debugging only this deep
 			}
 			this.picked = new ArrayList<Integer>();
 			success = recursion(targetDepth);
@@ -129,25 +131,29 @@ public class Rollout {
 	
 	private boolean recursion(Integer targetDepth) {
 		if (picked.size() != targetDepth) {
-			int start = 0;
+			int start = 0; // by default start from beginning
 			if (picked.size() > 0) {
-				// if we have already picked some bonuses, start picking the next one from the remaining list
-				start = picked.get(picked.size())+1;
+				// but if we have already picked some bonuses, start picking the next one
+				start = picked.get(picked.size()-1)+1;
 			}
-			picked.add(start);
-			for (int i=start; i < bonusList.size(); i++) {
-				picked.set(picked.size()-1, start);
+			for (int currTry=start; currTry < bonusList.size(); currTry++) {
+				picked.add(currTry);
 				recursion(targetDepth);
+				picked.remove(picked.size()-1);
 			}
 		} else {
 			// now that we have reached the targetDepth number of bonuses, and selected indexes for them
 			// build the list of GameBonuses they point to, and test the result
 			this.pickedList = new ArrayList<GameBonus>();
+			if (log_enable) { log += "td=" + targetDepth; }
 			for (int i : picked) {
 				this.pickedList.add(bonusList.get(i));
+				if (log_enable) { log += " " + i; }
 			}
+			if (log_enable) { log += "\n"; }
 			doInnerLoop();
 		}
+		// when returning to previous recursion level, undo the pick we made
 		// if we were successful in finding at least one solution, currentUsedGbList will be set to it
 		return currentUsedGbList != null;
 	}
@@ -179,8 +185,8 @@ public class Rollout {
 	private List<Integer> roll(int amountToRoll) {
         List<Integer> rolls = new ArrayList<Integer>();
         for (int x = 0; x < amountToRoll; x++) {
-            rolls.add(Math.abs(random.nextInt() % 6) + 1);
- 
+//            rolls.add(Math.abs(random.nextInt() % 6) + 1);
+            rolls.add(1); // FIXME !!! test
         }
         return rolls;
     }

@@ -33,6 +33,8 @@ public class MainActivity extends Activity {
     private CraftDieAdapter   supply_adapter;  // for now can just use the same adapter class
     private CraftToolsAdapter supplyT_adapter; //   "
     
+    private static final int NUM_ROLLS = 1000;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -198,7 +200,7 @@ public class MainActivity extends Activity {
     }
 
     public void doRollout(View view) {
-    	doRollout(view, 10000);
+    	doRollout(view, NUM_ROLLS);
     }
         
     public void doRollout(View view, Integer totalRolls) {

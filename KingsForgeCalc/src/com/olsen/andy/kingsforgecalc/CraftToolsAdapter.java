@@ -34,6 +34,9 @@ public class CraftToolsAdapter extends ArrayAdapter<Object> {
 			tv.setText("+");
 			tv.setTextColor(Color.WHITE);
 			tv.setBackgroundColor(Color.BLUE);
+		} else {
+			tv.setTextColor(Color.WHITE);
+			tv.setBackgroundColor(Color.DKGRAY);
 		}
 		return tv;
 	}
