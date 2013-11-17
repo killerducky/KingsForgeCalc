@@ -40,10 +40,10 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         craftcard_die = new ArrayList<Object>();
-    	craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
-    	craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
-    	craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN));
-    	craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN));
+    	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+    	craftcard_die.add(new GameObject(1, GameObject.GOColor.BLACK));
+    	craftcard_die.add(new GameObject(1, GameObject.GOColor.GREEN));
+    	craftcard_die.add(new GameObject(1, GameObject.GOColor.GREEN));
         GridView ccd_gv = (GridView) findViewById(R.id.craftcard_grid);
         ccd_adapter = new CraftDieAdapter(this, craftcard_die, null);
         ccd_gv.setAdapter(ccd_adapter);
@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
         });
 
         supply_die = new ArrayList<Object>();
-    	supply_die.add(new GameObject(3, GameObject.GOColor.BLACK));
+    	supply_die.add(new GameObject(2, GameObject.GOColor.BLACK));
     	supply_die.add(new GameObject(3, GameObject.GOColor.GREEN));
     	supply_die.add(new GameObject(3, GameObject.GOColor.RED  ));
     	supply_die.add(new GameObject(3, GameObject.GOColor.BLUE ));
@@ -239,9 +239,13 @@ public class MainActivity extends Activity {
 
     	if (haveEnoughDice) {
     		for (int x = 0; x < totalRolls; x++) {
+    			for (GameBonus bonus : bonus_list) { bonus.resetAssignmentsAndReroll(); }
     			boolean success = true;
     			for (GameObject.GOColor color : GameObject.GOColor.values()) {
     				List<Integer> rolls = roll(supplyHashInt.get(color));
+                    for (GameBonus bonus : bonus_list) { bonus.apply1to6(rolls); }
+    		        Collections.sort(rolls);
+    		        Collections.reverse(rolls);
     				if (!checkSuccess(rolls, neededHashList.get(color), bonus_list)) {
     					success = false;
     					continue;
@@ -250,8 +254,6 @@ public class MainActivity extends Activity {
     			if (success) { successes++; }
     		}
     	}
-
-    	
 
     	TextView rolloutResults = (TextView) findViewById(R.id.rollout_results);
     	if (result == "") { 
@@ -265,8 +267,6 @@ public class MainActivity extends Activity {
 			}
 		}
 		rolloutResults.setText(result);
-
-		
     }
 
     private boolean checkSuccess(List<Integer> rolled, List<Integer> needed, List<GameBonus> game_bonus) {
@@ -283,16 +283,28 @@ public class MainActivity extends Activity {
         return true;
     }
     
+    // TODO: handle applying multiple bonuses to the same die
     private boolean applyCheapestBonus(Integer rolled, Integer needed, List<GameBonus> game_bonus) {
-        if (true) {return false;} // FIXME:  Just skip this for now so I can checkin and test crlf stuff
+    	Integer tmp = 0;
+    	Integer highestPriority = 0;
+    	GameBonus currentUsedGb = null;
     	for (GameBonus gb : game_bonus) {
-        	// FIXME: For now just check that is isn't used
-        	// if not, apply and declare success!
         	if (!gb.allUsed()) {
-        		gb.addTarget(new GameObject(rolled, GameObject.GOColor.BLACK)); // FIXME I should point to the original GameObject
-        		return true;
+        		if (gb.applyBonus(rolled) >= needed) {
+        			if (gb.priority() > highestPriority ) {
+        				highestPriority = gb.priority();
+        				if (currentUsedGb != null) {
+        					// we found a cheaper bonus, so reset the old one to be unused
+        					currentUsedGb.resetAssignmentsDoNotReroll();
+        				}
+        				currentUsedGb = gb;
+                		gb.addTarget(new GameObject(rolled, GameObject.GOColor.BLACK)); // FIXME I should point to the original GameObject
+        			}
+        		    return true;
+        		}
         	}
         }
+    	tmp++;
         return false; // could not find a bonus that works
     }
   
@@ -302,8 +314,6 @@ public class MainActivity extends Activity {
             rolls.add(Math.abs(random.nextInt() % 6) + 1);
  
         }
-        Collections.sort(rolls);
-        Collections.reverse(rolls);
         return rolls;
     }
 }
