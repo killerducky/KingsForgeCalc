@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Random;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
@@ -229,10 +231,19 @@ public class MainActivity extends Activity {
     		Collections.reverse(neededHashList.get(color));
     	}
         
-    	String result = Rollout.doRollout(neededHashList, supplyHashInt, bonusList, totalRolls);
+    	Rollout rollout = new Rollout();
+    	HashMap<String, String> result = rollout.doRollout(neededHashList, supplyHashInt, bonusList, totalRolls);
 
     	TextView rolloutResults = (TextView) findViewById(R.id.rollout_results);
-		rolloutResults.setText(result);
+    	rolloutResults.setText(result.get("result"));
+
+    	AlertDialog.Builder resultbox = new AlertDialog.Builder(this);
+    	resultbox.setMessage(result.get("log") + "\n" + result.get("result"));
+    	resultbox.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+    		public void onClick(DialogInterface arg0, int arg1) {}
+    	});
+    	resultbox.show();
+
     }
 
 }
