@@ -36,7 +36,16 @@ public class GameBonus {
     }
 
     public String toString() {
-    	String str = this.name.toString();
+    	String str = "";
+    	switch (name) {
+    	case A1TO6: str = "1->6"  ; break;
+    	case P1X3 : str = "+1 (3)"; break;
+    	case P1   : str = "+1"    ; break; 
+    	case P2   : str = "+2"    ; break;
+    	case A6   : str = "Auto 6"; break;
+    	case WD   : str = "White Die"; break;
+    	case RR   : str = "Reroll"   ; break;
+    	}
     	if (name == Bonus.WD) {
     		str += "=" + white_die_value;
     	}

@@ -70,11 +70,10 @@ public class MainActivity extends Activity {
         });
 
         supply_die = new ArrayList<Object>();
-    	supply_die.add(new GameObject(2, GameObject.GOColor.BLACK));
-    	supply_die.add(new GameObject(3, GameObject.GOColor.GREEN));
-    	supply_die.add(new GameObject(3, GameObject.GOColor.RED  ));
-    	supply_die.add(new GameObject(3, GameObject.GOColor.BLUE ));
-    	for (Object o : supply_die) { GameObject go = (GameObject) o; go.setMin(0); go.setMax(50); }
+    	supply_die.add(new GameObject(2, GameObject.GOColor.BLACK, 0, 50));
+    	supply_die.add(new GameObject(3, GameObject.GOColor.GREEN, 0, 50));
+    	supply_die.add(new GameObject(3, GameObject.GOColor.RED  , 0, 50));
+    	supply_die.add(new GameObject(3, GameObject.GOColor.BLUE , 0, 50));
         GridView supply_gv = (GridView) findViewById(R.id.supply_grid);
         supply_adapter = new CraftDieAdapter(this, supply_die, null); // TODO CraftDie?
         supply_gv.setAdapter(supply_adapter);
@@ -91,6 +90,7 @@ public class MainActivity extends Activity {
         for (GameBonus.Bonus bonus : GameBonus.Bonus.values()) {
             supply_tools.add(new GameBonus(bonus));
         }
+        supply_tools.add(new String("Test"));
         GridView supplyT_gv = (GridView) findViewById(R.id.supply_tools);
         supplyT_adapter = new CraftToolsAdapter(this, supply_tools);
         supplyT_gv.setAdapter(supplyT_adapter);
@@ -176,6 +176,10 @@ public class MainActivity extends Activity {
     	if (clickedO instanceof GameBonus) {
     		supply_die.add(new GameBonus((GameBonus) clickedO));  // copy and add
     		supply_adapter.setSelectedPos(null);
+    	} else {
+    		if ("Test".equals(clickedO.toString())) {
+    			doTest();
+    		}
     	}
     	// TODO: currently inconsistent on who is responsible to call this
     	supply_adapter.notifyDataSetChanged();
@@ -242,4 +246,21 @@ public class MainActivity extends Activity {
 
     }
 
+    private void doTest() {
+    	ccd_adapter.setSelectedPos(null);
+    	craftcard_die.clear();
+    	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+    	ccd_adapter.notifyDataSetChanged();
+    	supply_adapter.setSelectedPos(null);
+    	supply_die.clear();
+    	supply_die.add(new GameObject(1, GameObject.GOColor.BLACK, 0, 50));
+    	supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+    	supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+    	supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+    	for (Object o : supply_die) { GameObject go = (GameObject) o; go.setMin(0); go.setMax(50); }
+    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+    	supply_adapter.notifyDataSetChanged();
+    }
 }

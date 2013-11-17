@@ -71,8 +71,7 @@ public class Rollout {
 			} else {
 				result = "Total successes: " + successes;
 				result += "\nTotal rolls: " + totalRolls;
-				// TODO: Why couldn't I put the trailing directly in the format, with/without escaping it.
-				result += String.format("\nChance to win: %2.2f", (1.0 * successes / totalRolls) * 100) + "%";
+				result += String.format("\nChance to win: %2.2f%%", (1.0 * successes / totalRolls) * 100);
 			}
 		}
     	HashMap<String, String> resultHash = new HashMap<String, String>();
@@ -103,12 +102,12 @@ public class Rollout {
 		boolean success;
 		this.lowestCost = Integer.MAX_VALUE;
 		this.currentUsedGbList = null;
-		for (int i=0; i < bonusList.size(); i++) {
-			if (i==1) {
+		for (int targetDepth=1; targetDepth <= bonusList.size(); targetDepth++) {
+			if (targetDepth>1) {
 				break;  // FIXME while debugging only go up to 1
 			}
 			this.picked = new ArrayList<Integer>();
-			success = recursion(i);
+			success = recursion(targetDepth);
 			if (success) { 
 				// don't bother going trying with more bonuses if we found something with this many
 				// technically it may be better to use more bonuses, but for now good enough

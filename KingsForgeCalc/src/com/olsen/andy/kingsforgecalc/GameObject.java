@@ -9,8 +9,12 @@ public class GameObject {
     private Integer max;
     
     public GameObject(Integer value, GOColor color) {
-    	setMin(1);  // make sure to set min/max first
-    	setMax(6);
+    	this(value, color, 1, 6);
+    }
+    
+	public GameObject(Integer value, GOColor color, int min, int max) {
+    	setMin(min);
+    	setMax(max);
     	setValue(value);
     	setColor(color);
     }
