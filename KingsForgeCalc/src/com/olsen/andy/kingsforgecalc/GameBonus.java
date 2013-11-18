@@ -79,14 +79,16 @@ public class GameBonus {
     }
     
     public Integer applyBonus(Integer value) {
-    	if (name == Bonus.A1TO6) { return (value==1) ? 6 : value; }
-        if (name == Bonus.P1X3 ) { return value + 1; }
-        if (name == Bonus.P1   ) { return value + 1; }
-    	if (name == Bonus.P2   ) { return value + 2; }
-    	if (name == Bonus.A6   ) { return 6; }
-    	if (name == Bonus.WD   ) { return white_die_value; }
-    	if (name == Bonus.RR   ) { return value; }  // cannot simply reroll one by one
-    	return value;
+    	switch(name) {
+    	case A1TO6: return (value==1) ? 6 : value;
+    	case P1X3 : return value + 1;
+    	case P1   : return value + 1;
+    	case P2   : return value + 2;
+    	case A6   : return 6;
+    	case WD   : return white_die_value;
+    	case RR   : return value; // cannot simply reroll one by one
+    	default: return value;
+    	}
     }
     
     public void apply1to6(List<Integer> rolls) {

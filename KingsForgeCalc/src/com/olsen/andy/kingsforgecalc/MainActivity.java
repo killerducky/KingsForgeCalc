@@ -180,7 +180,7 @@ public class MainActivity extends Activity {
     		supply_adapter.setSelectedPos(null);
     	} else {
     		if ("Test".equals(clickedO.toString())) {
-    			doTest();
+    			doTest2();
     		}
     	}
     	// TODO: currently inconsistent on who is responsible to call this
@@ -194,7 +194,6 @@ public class MainActivity extends Activity {
     	return true;
     }
     
-    // TODO: Eventually this will be a separate thing that nicely displays your one roll result
     public void doRollout1(View view) {
     	doRollout(view, 1);
     }
@@ -240,7 +239,7 @@ public class MainActivity extends Activity {
     	rolloutResults.setText(result.get("result"));
 
     	AlertDialog.Builder resultbox = new AlertDialog.Builder(this);
-    	resultbox.setMessage(result.get("log") + "\n" + result.get("result"));
+    	resultbox.setMessage("Final Results:\n" + result.get("result") + "\n\nDebug Info:\n" + result.get("log"));
     	resultbox.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
     		public void onClick(DialogInterface arg0, int arg1) {}
     	});
@@ -248,21 +247,43 @@ public class MainActivity extends Activity {
 
     }
 
-    private void doTest() {
+//    private void doTest() {
+//    	ccd_adapter.setSelectedPos(null);
+//    	craftcard_die.clear();
+//    	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+//    	ccd_adapter.notifyDataSetChanged();
+//    	supply_adapter.setSelectedPos(null);
+//    	supply_die.clear();
+//    	supply_die.add(new GameObject(1, GameObject.GOColor.BLACK, 0, 50));
+//    	supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+//    	supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+//    	supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+//    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+//    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+//    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+//    	supply_adapter.notifyDataSetChanged();
+//    }
+    
+    // for a time test, require 3 black 6s, and have 4 "+1 (3)" bonuses
+    // 1000 rolls
+    // Time=0.54s,  Odds=59.74%
+    private void doTest2() {
     	ccd_adapter.setSelectedPos(null);
     	craftcard_die.clear();
+    	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+    	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
     	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
     	ccd_adapter.notifyDataSetChanged();
     	supply_adapter.setSelectedPos(null);
     	supply_die.clear();
-    	supply_die.add(new GameObject(1, GameObject.GOColor.BLACK, 0, 50));
+    	supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
     	supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
     	supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
     	supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
-    	for (Object o : supply_die) { GameObject go = (GameObject) o; go.setMin(0); go.setMax(50); }
-    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
-    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
-    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+    	supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+    	supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+    	supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+    	supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
     	supply_adapter.notifyDataSetChanged();
     }
 }

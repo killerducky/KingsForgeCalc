@@ -14,10 +14,10 @@ public class Rollout {
     
     // some state variables for the recursive routines
     // maybe refactor into a separate class but for now just put here
-    Integer         rolled;
-    Integer         needed;
+    int             rolled;
+    int             needed;
     List<GameBonus> bonusList;
-	Integer         lowestCost;
+	int             lowestCost;
 	List<GameBonus> currentUsedGbList;
 	List<Integer>   picked;
 	List<GameBonus> pickedList;
@@ -35,6 +35,7 @@ public class Rollout {
     	Integer successes = 0;
 		String result = "";
 		log = ""; // initialize log
+		long startTime = System.currentTimeMillis();
 	
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
     		if (neededHashList.get(color).size() > supplyHashInt.get(color)) {
@@ -76,6 +77,9 @@ public class Rollout {
 				result += String.format("\nChance to win: %2.2f%%", (1.0 * successes / totalRolls) * 100);
 			}
 		}
+		double timeUsed = (System.currentTimeMillis() - startTime) / 1000.0;
+		log = String.format("Time: %.2fs\n", timeUsed) + log;
+
     	HashMap<String, String> resultHash = new HashMap<String, String>();
     	resultHash.put("result", result);
     	resultHash.put("log",  log);
@@ -129,7 +133,7 @@ public class Rollout {
 		return (this.currentUsedGbList != null);  // if we succeeded this will have a value
 	}
 	
-	private boolean recursion(Integer targetDepth) {
+	private boolean recursion(int targetDepth) {
 		if (picked.size() != targetDepth) {
 			int start = 0; // by default start from beginning
 			if (picked.size() > 0) {
@@ -137,20 +141,21 @@ public class Rollout {
 				start = picked.get(picked.size()-1)+1;
 			}
 			for (int currTry=start; currTry < bonusList.size(); currTry++) {
-				picked.add(currTry);
-				recursion(targetDepth);
-				picked.remove(picked.size()-1);
+				if (!bonusList.get(currTry).allUsed()) {
+					picked.add(currTry);
+					recursion(targetDepth);
+					picked.remove(picked.size()-1);
+				}
 			}
 		} else {
 			// now that we have reached the targetDepth number of bonuses, and selected indexes for them
 			// build the list of GameBonuses they point to, and test the result
 			this.pickedList = new ArrayList<GameBonus>();
-			if (log_enable) { log += "td=" + targetDepth; }
+			if (log_enable) { log += "\ntd=" + targetDepth; }
 			for (int i : picked) {
 				this.pickedList.add(bonusList.get(i));
 				if (log_enable) { log += " " + i; }
 			}
-			if (log_enable) { log += "\n"; }
 			doInnerLoop();
 		}
 		// when returning to previous recursion level, undo the pick we made
@@ -163,10 +168,8 @@ public class Rollout {
 		int totalCost  = 0;
 		// loop over all these bonuses and apply them, keeping running total afterBonus and cost
 		for (GameBonus gb : pickedList) {
-			if (!gb.allUsed()) {
-				afterBonus = gb.applyBonus(afterBonus);
-				totalCost += gb.cost();
-			}
+			afterBonus = gb.applyBonus(afterBonus);
+			totalCost += gb.cost();
 		}
 		if (afterBonus >= needed) {
 			if (totalCost < lowestCost) {
@@ -176,7 +179,7 @@ public class Rollout {
 				}
 				currentUsedGbList = pickedList;
 				for (GameBonus gb : currentUsedGbList) {
-					gb.addTarget(new GameObject(rolled, GameObject.GOColor.BLACK)); // FIXME I should point to the original GameObject
+					gb.addTarget(null); // FIXME I should point to the original GameObject
 				}
 			}
 		}
