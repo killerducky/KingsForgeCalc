@@ -10,8 +10,12 @@ import java.util.Random;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -33,11 +37,16 @@ public class MainActivity extends Activity {
     private CraftDieAdapter   supply_adapter;  // for now can just use the same adapter class
     private CraftToolsAdapter supplyT_adapter; //   "
     
+    public SharedPreferences sharedPref;
+
     private static final int NUM_ROLLS = 1000;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);  // TODO: Where should I put this?
+
         setContentView(R.layout.activity_main);
 
         craftcard_die = new ArrayList<Object>();
@@ -194,6 +203,16 @@ public class MainActivity extends Activity {
     	return true;
     }
     
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	switch (item.getItemId()) {
+    	case R.id.action_settings:
+    		startActivity(new Intent (this, Settings.class));
+    		return true;
+    	}
+    	return true;
+    }
+    
     public void doRollout1(View view) {
     	doRollout(view, 1);
     }
@@ -232,18 +251,20 @@ public class MainActivity extends Activity {
     		Collections.reverse(neededHashList.get(color));
     	}
         
-    	Rollout rollout = new Rollout();
+    	Rollout rollout = new Rollout(sharedPref);  // TODO passing this is lame
     	HashMap<String, String> result = rollout.doRollout(neededHashList, supplyHashInt, bonusList, totalRolls);
 
     	TextView rolloutResults = (TextView) findViewById(R.id.rollout_results);
     	rolloutResults.setText(result.get("result"));
 
-    	AlertDialog.Builder resultbox = new AlertDialog.Builder(this);
-    	resultbox.setMessage("Final Results:\n" + result.get("result") + "\n\nDebug Info:\n" + result.get("log"));
-    	resultbox.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
-    		public void onClick(DialogInterface arg0, int arg1) {}
-    	});
-    	resultbox.show();
+    	if (sharedPref.getBoolean("pref_debug_log_enable",  false)) {
+    		AlertDialog.Builder resultbox = new AlertDialog.Builder(this);
+    		resultbox.setMessage("Final Results:\n" + result.get("result") + "\n\nDebug Info:\n" + result.get("log"));
+    		resultbox.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+    			public void onClick(DialogInterface arg0, int arg1) {}
+    		});
+        	resultbox.show();
+    	}
 
     }
 
@@ -266,7 +287,7 @@ public class MainActivity extends Activity {
     
     // for a time test, require 3 black 6s, and have 4 "+1 (3)" bonuses
     // 1000 rolls
-    // Time=0.54s,  Odds=59.74%
+    // Time=0.54s,  Odds=59.04%
     private void doTest2() {
     	ccd_adapter.setSelectedPos(null);
     	craftcard_die.clear();

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="pref_debug_log_enable"
+        android:title="Debug: Enable Logging" />
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="pref_debug_all_1s"
+        android:title="Debug: Rolls 1s" />
+
+</PreferenceScreen>

@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import android.content.SharedPreferences;
+
 public class Rollout {
 	Random random = new Random(new Date().getTime());
     String log;
@@ -21,10 +23,16 @@ public class Rollout {
 	List<GameBonus> currentUsedGbList;
 	List<Integer>   picked;
 	List<GameBonus> pickedList;
+    public SharedPreferences sharedPref;
+
 	
 	private static final int MAX_BONUSES_PER_DIE = 6; // it takes 6 +1 bonuses to make a 1 into a 7 and break a tie with a 6
 
-    
+	
+	public Rollout(SharedPreferences sharedPref) {
+		this.sharedPref = sharedPref;
+	}
+	
 	public HashMap<String, String> doRollout(
 			HashMap<GameObject.GOColor, List<Integer>> neededHashList,
 			HashMap<GameObject.GOColor, Integer> supplyHashInt, 
@@ -46,7 +54,7 @@ public class Rollout {
     	
 		if (haveEnoughDice) {
 			for (int x = 0; x < totalRolls; x++) {
-				log_enable = x==0; // only log the first run
+				log_enable = (x==0 && sharedPref.getBoolean("pref_debug_log_enable",  false)); // only log the first run
 				if (log_enable) { log += "Bonuses:"; } 
 				for (GameBonus bonus : bonusList) { 
 					if (log_enable) { log += " " + bonus.toString(); }
@@ -122,13 +130,13 @@ public class Rollout {
 		}
 		if (this.currentUsedGbList != null) {
 			if (log_enable) { 
-				log += "use:";
+				log += "\nuse:";
 				for (GameBonus gb : this.currentUsedGbList ) {
 					log += " " + gb.toString();
 				}
 			}
 		} else {
-			if (log_enable) { log += "failed to find working bonus"; }
+			if (log_enable) { log += "\nfailed to find working bonus"; }
 		}
 		return (this.currentUsedGbList != null);  // if we succeeded this will have a value
 	}
@@ -187,8 +195,16 @@ public class Rollout {
 
 	private List<Integer> roll(int amountToRoll) {
         List<Integer> rolls = new ArrayList<Integer>();
-        for (int x = 0; x < amountToRoll; x++) {
-            rolls.add(Math.abs(random.nextInt() % 6) + 1);
+        boolean debug_roll_all_1s = sharedPref.getBoolean("pref_debug_all_1s", false);
+        if (log_enable) { log += "\ndebug_roll_all_1s=" + debug_roll_all_1s; }
+        if (!debug_roll_all_1s) {
+        	for (int x = 0; x < amountToRoll; x++) {
+        		rolls.add(Math.abs(random.nextInt() % 6) + 1);
+        	}
+        } else {
+        	for (int x = 0; x < amountToRoll; x++) {
+        		rolls.add(1);
+        	}
         }
         return rolls;
     }

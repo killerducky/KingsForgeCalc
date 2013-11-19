@@ -4,9 +4,10 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
+    <!-- TODO: Preferences made me move up to 11... investigate enabling older versions later -->
     <uses-sdk
-        android:minSdkVersion="8"
-        android:targetSdkVersion="18" />
+        android:minSdkVersion="11"
+        android:targetSdkVersion="19" />
 
     <application
         android:allowBackup="true"
@@ -29,6 +30,10 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.olsen.andy.kingsforgecalc" />
+        </activity>
+        <activity
+            android:name="com.olsen.andy.kingsforgecalc.Settings"
+            android:label="@string/title_activity_settings" >
         </activity>
     </application>
 
