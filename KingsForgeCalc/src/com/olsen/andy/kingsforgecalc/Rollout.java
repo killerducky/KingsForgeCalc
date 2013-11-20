@@ -1,6 +1,7 @@
 package com.olsen.andy.kingsforgecalc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -59,22 +60,30 @@ public class Rollout {
 				}
 				boolean success = true;
 				
-				// roll all other dice, and apply A1TO6 bonus
+				// Roll all normal dice
 				for (GameObject.GOColor color : GameObject.GOColor.values()) {
 					List<Integer> rolls = roll(supplyHashInt.get(color));
-					rolledHashList.put(color, rolls);
-					if (log_enable) { log += rollsToString(color, rolledHashList.get(color)); }
-					for (GameBonus bonus : bonusList) { bonus.apply1to6(rolledHashList.get(color)); }
 					Collections.sort(rolls);
 					Collections.reverse(rolls);
-					if (log_enable) { log += "\nAfter 1->6:" + rollsToString(color, rolls) + "\n"; }
+					rolledHashList.put(color, rolls);
 				}
-				// apply more bonuses
+				if (log_enable) { log += "\nRolled:" + diceHashListToString(rolledHashList) + "\n"; }
+
+				// Apply bonuses
+				for (GameObject.GOColor color : GameObject.GOColor.values()) {
+					List<Integer> rolls = rolledHashList.get(color);
+					for (GameBonus bonus : bonusList) { bonus.apply1to6(rolls); }
+					Collections.sort(rolls);
+					Collections.reverse(rolls);
+				}
+				if (log_enable) { log += "\nAfter 1->6:" + diceHashListToString(rolledHashList) + "\n"; }
 				doBonusWD();
 				findLargestGainAndApplyBonus(GameBonus.Bonus.A6);
 				findLargestGainAndApplyBonus(GameBonus.Bonus.P2);
 				findLargestGainAndApplyBonus(GameBonus.Bonus.P1);
+				if (log_enable) { log += "\nAfter A6,P2,P1:" + diceHashListToString(rolledHashList) + "\n"; }
 				findLargestGainAndApplyBonus(GameBonus.Bonus.P1X3);
+				if (log_enable) { log += "\nAfter P1X3:" + diceHashListToString(rolledHashList) + "\n"; }
 				// TODO: reroll
 				success = checkSuccess();
 				
@@ -119,6 +128,7 @@ public class Rollout {
 							Collections.sort(rolls);
 							Collections.reverse(rolls);
 							// FIXME: Improve by trying other colors too
+							// need code similar to Bonus.A6 code but have to do a sort...
 							continue;
 						}
 					}
@@ -129,39 +139,100 @@ public class Rollout {
 
 	// find the smallest die that we actually need, and apply the bonus to it
 	// FIXME: P1X3 not correct
+	Integer largestGain;
+	GameObject.GOColor saveColor;
+	Integer saveIndex;
+	Integer saveValue;
+	List<Integer> P1X3largestGain = Arrays.asList(0,0,0);
+	List<GameObject.GOColor> P1X3saveColor = Arrays.asList(null,null,null);
+	List<Integer> P1X3saveIndex = Arrays.asList(null,null,null);
+	List<Integer> P1X3saveValue = Arrays.asList(null,null,null);
 	private void findLargestGainAndApplyBonus(GameBonus.Bonus bonusType) {
 		for (GameBonus gb : bonusList) {
 			if (gb.getBonusType() == bonusType) {
-				int largestGain = 0;
-				GameObject.GOColor saveColor = null;
-				Integer saveIndex = null;
-				Integer saveValue = null;
+				largestGain = 0;
+				P1X3largestGain = Arrays.asList(0,0,0);
 				for (GameObject.GOColor color : GameObject.GOColor.values()) {
 					List<Integer> needed = neededHashList.get(color);
 					if (needed.size() == 0) {
 						continue;
 					}
 					List<Integer> rolls = rolledHashList.get(color);
-					for (int i=0; i < needed.size(); i++) {
-						int currValue = rolls.get(i);
-						int gain = gb.applyBonus(currValue) - currValue;
-						gain = Math.min(gain, needed.get(i) - currValue);  // don't give extra credit to overshooting the value
+					// For the A6 type, only consider the smallest die.
+					if (bonusType == GameBonus.Bonus.A6) {
+						int oldDeficit = 0;
+						int newDeficit = 0;
+						for (int i=0; i < needed.size(); i++) {
+							oldDeficit += Math.max(needed.get(i) - rolls.get(i), 0);
+							if (i == 0) {
+								// Usually here the auto 6 will always be good, 
+								// so the (needed-6) part will be negative, and we just take 0  
+								// but in the future I may support code for 7s+
+								oldDeficit += Math.max(needed.get(i) - 6, 0);
+							} else {
+								//      i   0   1   2   3
+								// Needed   0   1   2   3
+								//  Rolls   A6  0   1   2  <--- new auto 6 goes to top, other rolls shift down one
+								//              ^------------- compare needed[i] to rolls[i-1]
+								newDeficit += Math.max(needed.get(i) - rolls.get(i-1), 0);
+							}
+						}
+						int gain = oldDeficit - newDeficit;
 						if (gain > largestGain) {
 							largestGain = gain;
 							saveColor = color;
-							saveIndex = i;
-							saveValue = gb.applyBonus(currValue);
+							saveIndex = needed.size()-1;
+							saveValue = 6;   // optimize out gb.applyBonus(null)
+						}
+					} else {
+						for (int i=0; i < needed.size(); i++) {
+							int currValue = rolls.get(i);
+							int gain = gb.applyBonus(currValue) - currValue;
+							gain = Math.min(gain, needed.get(i) - currValue);  // don't give extra credit to overshooting the value
+							if (bonusType == GameBonus.Bonus.P1X3) {
+								for (int j=0; j < 3; j++) {
+									if (gain > P1X3largestGain.get(j)) {
+										P1X3largestGain.set(j, gain);
+										P1X3saveColor.set(j, color);
+										P1X3saveIndex.set(j, i);
+										P1X3saveValue.set(j, gb.applyBonus(currValue));
+										break;
+									}
+								}
+							} else {
+								if (gain > largestGain) {
+									largestGain = gain;
+									saveColor = color;
+									saveIndex = i;
+									saveValue = gb.applyBonus(currValue);
+								}
+							}
 						}
 					}
 				}
-				if (largestGain != 0) {
-					rolledHashList.get(saveColor).set(saveIndex, saveValue);
+				if (bonusType == GameBonus.Bonus.P1X3) {
+					for (int j=0; j < 3; j++) {
+						if (P1X3largestGain.get(j) != 0) {
+							List<Integer> rolls = rolledHashList.get(P1X3saveColor.get(j));
+							rolls.set(P1X3saveIndex.get(j), P1X3saveValue.get(j));
+							// probably some redundant sorting in this case...
+							Collections.sort(rolls);
+							Collections.reverse(rolls);
+						}
+					}
+				} else {
+					if (largestGain != 0) {
+						List<Integer> rolls = rolledHashList.get(saveColor);
+						rolls.set(saveIndex, saveValue);
+						Collections.sort(rolls);
+						Collections.reverse(rolls);
+					}
 				}
 			}
 		}
 	}
-	
-	
+
+
 	private boolean checkSuccess() {
 		for (GameObject.GOColor color : GameObject.GOColor.values()) {
 			List<Integer> rolled = rolledHashList.get(color);
@@ -191,13 +262,19 @@ public class Rollout {
         return rolls;
     }
 
+	private String diceHashListToString(HashMap<GameObject.GOColor, List<Integer>> diceHashList) {
+		String log = "\n";
+		for (GameObject.GOColor color : GameObject.GOColor.values()) {
+			log += rollsToString(color, diceHashList.get(color)) + " ";
+		}
+		return log;
+	}
+
 	private String rollsToString(GameObject.GOColor color, List<Integer> rolls) {
 		String log;
-		Collections.sort(rolls);
-		Collections.reverse(rolls);
-		log = "\n" + color + ":"; 
+		log = color + ":"; 
 		for (Integer roll : rolls) {
-			log += " " + roll;
+			log += roll;
 		}
 		return log;
 	}

@@ -287,7 +287,8 @@ public class MainActivity extends Activity {
     
     // for a time test, require 3 black 6s, and have 4 "+1 (3)" bonuses
     // 1000 rolls
-    // Time=0.54s,  Odds=59.04%
+    // 16bd584526a9337112c93092ac681d3260d97640 - Time=0.54s,  Odds=59.04%
+    // Time=0.30
     private void doTest2() {
     	ccd_adapter.setSelectedPos(null);
     	craftcard_die.clear();
