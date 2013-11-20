@@ -289,6 +289,10 @@ public class MainActivity extends Activity {
     // 1000 rolls
     // 16bd584526a9337112c93092ac681d3260d97640 - Time=0.54s,  Odds=59.04%
     // Time=0.30
+    //
+    // TODO: more tests:
+    // Black 4333, supply 4 black, P1X3:3, roll 1s.  Should pass 100%
+    //
     private void doTest2() {
     	ccd_adapter.setSelectedPos(null);
     	craftcard_die.clear();
