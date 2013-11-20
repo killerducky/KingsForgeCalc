@@ -10,24 +10,16 @@ import java.util.Random;
 import android.content.SharedPreferences;
 
 public class Rollout {
-	Random random = new Random(new Date().getTime());
-    String log;
-    boolean log_enable;
-    
-    // some state variables for the recursive routines
-    // maybe refactor into a separate class but for now just put here
-    int             rolled;
-    int             needed;
-    List<GameBonus> bonusList;
-	int             lowestCost;
-	List<GameBonus> currentUsedGbList;
-	List<Integer>   picked;
-	List<GameBonus> pickedList;
     public SharedPreferences sharedPref;
 
+    private Random random = new Random(new Date().getTime());
+    private String log;
+    private boolean log_enable;
+    
+	private HashMap<GameObject.GOColor, List<Integer>> neededHashList;
+    private List<GameBonus> bonusList;
+	private HashMap<GameObject.GOColor, List<Integer>> rolledHashList;
 	
-	private static final int MAX_BONUSES_PER_DIE = 6; // it takes 6 +1 bonuses to make a 1 into a 7 and break a tie with a 6
-
 	
 	public Rollout(SharedPreferences sharedPref) {
 		this.sharedPref = sharedPref;
@@ -44,7 +36,10 @@ public class Rollout {
 		String result = "";
 		log = ""; // initialize log
 		long startTime = System.currentTimeMillis();
-	
+		this.rolledHashList = new HashMap<GameObject.GOColor, List<Integer>>();
+		this.neededHashList = neededHashList;
+		this.bonusList = bonusList;
+
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
     		if (neededHashList.get(color).size() > supplyHashInt.get(color)) {
     			haveEnoughDice = false;
@@ -56,23 +51,33 @@ public class Rollout {
 			for (int x = 0; x < totalRolls; x++) {
 				log_enable = (x==0 && sharedPref.getBoolean("pref_debug_log_enable",  false)); // only log the first run
 				if (log_enable) { log += "Bonuses:"; } 
+
+				// reset bonuses and reroll the white die
 				for (GameBonus bonus : bonusList) { 
 					if (log_enable) { log += " " + bonus.toString(); }
 					bonus.resetAssignmentsAndReroll();
 				}
 				boolean success = true;
+				
+				// roll all other dice, and apply A1TO6 bonus
 				for (GameObject.GOColor color : GameObject.GOColor.values()) {
 					List<Integer> rolls = roll(supplyHashInt.get(color));
-					if (log_enable) { log += rollsToString(color, rolls); }
-					for (GameBonus bonus : bonusList) { bonus.apply1to6(rolls); }
+					rolledHashList.put(color, rolls);
+					if (log_enable) { log += rollsToString(color, rolledHashList.get(color)); }
+					for (GameBonus bonus : bonusList) { bonus.apply1to6(rolledHashList.get(color)); }
 					Collections.sort(rolls);
 					Collections.reverse(rolls);
 					if (log_enable) { log += "\nAfter 1->6:" + rollsToString(color, rolls) + "\n"; }
-					if (!checkSuccess(rolls, neededHashList.get(color), bonusList)) {
-						success = false;
-						break;
-					}
 				}
+				// apply more bonuses
+				doBonusWD();
+				findLargestGainAndApplyBonus(GameBonus.Bonus.A6);
+				findLargestGainAndApplyBonus(GameBonus.Bonus.P2);
+				findLargestGainAndApplyBonus(GameBonus.Bonus.P1);
+				findLargestGainAndApplyBonus(GameBonus.Bonus.P1X3);
+				// TODO: reroll
+				success = checkSuccess();
+				
 				if (success) { successes++; }
 			}
 		}
@@ -94,103 +99,80 @@ public class Rollout {
     	return resultHash;
 	}
 
-	private boolean checkSuccess(List<Integer> rolled, List<Integer> needed, List<GameBonus> bonusList) {
-        int x = 0;
-        Integer thisRolled;
-        for (Integer need : needed) {
-        	thisRolled = rolled.get(x++);
-            if (thisRolled < need) {
-            	// prepare recursion state
-            	this.rolled = thisRolled;
-            	this.needed = need;
-            	this.bonusList = bonusList;
-            	if (!applyCheapestBonus()) {
-            		return false;
-            	}
-            }
-        }
-        return true;
+	private void doBonusWD() {
+		for (GameBonus gb : bonusList) {
+			if (gb.getBonusType() == GameBonus.Bonus.WD) {
+				for (GameObject.GOColor color : GameObject.GOColor.values()) {
+					List<Integer> rolls = rolledHashList.get(color);
+					List<Integer> needed = neededHashList.get(color);
+					if (needed.size() == 0) { 
+						continue;
+					}
+					if (needed.size() > rolls.size()) {
+						// if we didn't have enough of this color, add the white die here
+						log += "\nUse: " + gb.toString() + "on:" + color;
+						rolls.add(gb.applyBonus(null));
+						continue;
+					} else {
+						if (rolls.get(needed.size()-1) < gb.applyBonus(null)) {
+							rolls.set(needed.size()-1, gb.applyBonus(null));
+							Collections.sort(rolls);
+							Collections.reverse(rolls);
+							// FIXME: Improve by trying other colors too
+							continue;
+						}
+					}
+				}
+			}
+		}
 	}
 
-	private boolean applyCheapestBonus() {
-		boolean success;
-		this.lowestCost = Integer.MAX_VALUE;
-		this.currentUsedGbList = null;
-		for (int targetDepth=1; targetDepth <= bonusList.size(); targetDepth++) {
-			if (targetDepth>MAX_BONUSES_PER_DIE) {
-				break;  // FIXME while debugging only this deep
-			}
-			this.picked = new ArrayList<Integer>();
-			success = recursion(targetDepth);
-			if (success) { 
-				// don't bother going trying with more bonuses if we found something with this many
-				// technically it may be better to use more bonuses, but for now good enough
-				break;  
-			}
-		}
-		if (this.currentUsedGbList != null) {
-			if (log_enable) { 
-				log += "\nuse:";
-				for (GameBonus gb : this.currentUsedGbList ) {
-					log += " " + gb.toString();
+	// find the smallest die that we actually need, and apply the bonus to it
+	// FIXME: P1X3 not correct
+	private void findLargestGainAndApplyBonus(GameBonus.Bonus bonusType) {
+		for (GameBonus gb : bonusList) {
+			if (gb.getBonusType() == bonusType) {
+				int largestGain = 0;
+				GameObject.GOColor saveColor = null;
+				Integer saveIndex = null;
+				Integer saveValue = null;
+				for (GameObject.GOColor color : GameObject.GOColor.values()) {
+					List<Integer> needed = neededHashList.get(color);
+					if (needed.size() == 0) {
+						continue;
+					}
+					List<Integer> rolls = rolledHashList.get(color);
+					for (int i=0; i < needed.size(); i++) {
+						int currValue = rolls.get(i);
+						int gain = gb.applyBonus(currValue) - currValue;
+						gain = Math.min(gain, needed.get(i) - currValue);  // don't give extra credit to overshooting the value
+						if (gain > largestGain) {
+							largestGain = gain;
+							saveColor = color;
+							saveIndex = i;
+							saveValue = gb.applyBonus(currValue);
+						}
+					}
+				}
+				if (largestGain != 0) {
+					rolledHashList.get(saveColor).set(saveIndex, saveValue);
 				}
 			}
-		} else {
-			if (log_enable) { log += "\nfailed to find working bonus"; }
 		}
-		return (this.currentUsedGbList != null);  // if we succeeded this will have a value
 	}
 	
-	private boolean recursion(int targetDepth) {
-		if (picked.size() != targetDepth) {
-			int start = 0; // by default start from beginning
-			if (picked.size() > 0) {
-				// but if we have already picked some bonuses, start picking the next one
-				start = picked.get(picked.size()-1)+1;
-			}
-			for (int currTry=start; currTry < bonusList.size(); currTry++) {
-				if (!bonusList.get(currTry).allUsed()) {
-					picked.add(currTry);
-					recursion(targetDepth);
-					picked.remove(picked.size()-1);
-				}
-			}
-		} else {
-			// now that we have reached the targetDepth number of bonuses, and selected indexes for them
-			// build the list of GameBonuses they point to, and test the result
-			this.pickedList = new ArrayList<GameBonus>();
-			if (log_enable) { log += "\ntd=" + targetDepth; }
-			for (int i : picked) {
-				this.pickedList.add(bonusList.get(i));
-				if (log_enable) { log += " " + i; }
-			}
-			doInnerLoop();
-		}
-		// when returning to previous recursion level, undo the pick we made
-		// if we were successful in finding at least one solution, currentUsedGbList will be set to it
-		return currentUsedGbList != null;
-	}
 	
-	private void doInnerLoop() {
-		int afterBonus = rolled;
-		int totalCost  = 0;
-		// loop over all these bonuses and apply them, keeping running total afterBonus and cost
-		for (GameBonus gb : pickedList) {
-			afterBonus = gb.applyBonus(afterBonus);
-			totalCost += gb.cost();
-		}
-		if (afterBonus >= needed) {
-			if (totalCost < lowestCost) {
-				if (currentUsedGbList != null) {
-					// we found a cheaper bonus combination, so reset the old one to be unused
-					for (GameBonus gb : currentUsedGbList) { gb.resetAssignmentsDoNotReroll(); }
-				}
-				currentUsedGbList = pickedList;
-				for (GameBonus gb : currentUsedGbList) {
-					gb.addTarget(null); // FIXME I should point to the original GameObject
+	private boolean checkSuccess() {
+		for (GameObject.GOColor color : GameObject.GOColor.values()) {
+			List<Integer> rolled = rolledHashList.get(color);
+			List<Integer> needed = neededHashList.get(color);
+			for (int i=0; i < needed.size(); i++) {
+				if (rolled.get(i) < needed.get(i)) {
+					return false;
 				}
 			}
 		}
+        return true;
 	}
 
 	private List<Integer> roll(int amountToRoll) {
