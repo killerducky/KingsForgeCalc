@@ -1,20 +1,15 @@
 package com.olsen.andy.kingsforgecalc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 
-//public class GameBonusHashList extends HashMap<GameBonus.Bonus, List<GameBonus>> implements Iterable<GameBonus> {
-public class GameBonusHashList implements Iterable<GameBonus> {
-
-    private HashMap<GameBonus.Bonus, List<GameBonus>> hashList;
-
+public class GameBonusHashList extends HashMap<GameBonus.Bonus, List<GameBonus>> implements Iterable<GameBonus> {
     public GameBonusHashList() {
-        hashList = new HashMap<GameBonus.Bonus, List<GameBonus>>();
+        super();
     }
-    
-    public List<GameBonus> get(GameBonus.Bonus bonusType) { return hashList.get(bonusType); }
-    public void put(GameBonus.Bonus bonusType, List<GameBonus> gb) { hashList.put(bonusType, gb); }
     
     @Override
     public ListIterator<GameBonus> iterator() {
@@ -23,76 +18,44 @@ public class GameBonusHashList implements Iterable<GameBonus> {
     }
 
     class MyIter implements ListIterator<GameBonus> {
-        private ListIterator<GameBonus> a6Iter;
-        private ListIterator<GameBonus> wdIter;
-        private ListIterator<GameBonus> p2Iter;
-        private ListIterator<GameBonus> currIter;
+        private List<ListIterator<GameBonus>> iters;
+        private Integer currIterIndex;
         
         public MyIter() {
-            List<GameBonus> a6List = hashList.get(GameBonus.Bonus.A6);
-            a6Iter = a6List.listIterator();
-            a6Iter = hashList.get(GameBonus.Bonus.A6).listIterator();
-            wdIter = hashList.get(GameBonus.Bonus.WD).listIterator();
-            p2Iter = hashList.get(GameBonus.Bonus.P2).listIterator();
-            currIter = a6Iter;
+            iters = new ArrayList<ListIterator<GameBonus>>();
+            iters.add(get(GameBonus.Bonus.A6).listIterator());
+            iters.add(get(GameBonus.Bonus.WD).listIterator());
+            iters.add(get(GameBonus.Bonus.P2).listIterator());
+            currIterIndex = 0;
         }
         
         public boolean hasNext() {
-            if (currIter == a6Iter) {
-                return a6Iter.hasNext() || wdIter.hasNext() || p2Iter.hasNext();
-            } else if (currIter == wdIter) {
-                return wdIter.hasNext() || p2Iter.hasNext();
-            } else if (currIter == p2Iter) {
-                return p2Iter.hasNext();
+            for (int i=currIterIndex; i < iters.size(); i++) {
+                if (iters.get(i).hasNext()) { return true; }
             }
             return false;
         }
         public GameBonus next() {
-            if (currIter == a6Iter) {
-                if (a6Iter.hasNext()) { 
-                    return a6Iter.next(); 
-                } else {
-                    currIter = wdIter;
+            for (; currIterIndex < iters.size(); currIterIndex++) {
+                if (iters.get(currIterIndex).hasNext()) { 
+                    return iters.get(currIterIndex).next();
                 }
             }
-            if (currIter == wdIter) {
-                if (wdIter.hasNext()) { 
-                    return wdIter.next(); 
-                } else {
-                    currIter = p2Iter;
-                }
-            }
-            assert (currIter == p2Iter);
-            return p2Iter.next(); 
+            throw new NoSuchElementException();
         }
         public boolean hasPrevious() {
-            if (currIter == p2Iter) {
-                return p2Iter.hasPrevious() || wdIter.hasPrevious() || a6Iter.hasPrevious();
-            } else if (currIter == wdIter) {
-                return wdIter.hasPrevious() || a6Iter.hasPrevious();
-            } else if (currIter == a6Iter) {
-                return a6Iter.hasPrevious();
+            for (int i=currIterIndex; i>=0; i--) {
+                if (iters.get(i).hasPrevious()) { return true; }
             }
             return false;
         }
         public GameBonus previous() {
-            if (currIter == p2Iter) {
-                if (p2Iter.hasPrevious()) { 
-                    return p2Iter.previous(); 
-                } else {
-                    currIter = wdIter;
+            for (; currIterIndex >= 0; currIterIndex--) {
+                if (iters.get(currIterIndex).hasPrevious()) { 
+                    return iters.get(currIterIndex).previous(); 
                 }
             }
-            if (currIter == wdIter) {
-                if (wdIter.hasPrevious()) { 
-                    return wdIter.previous(); 
-                } else {
-                    currIter = a6Iter;
-                }
-            }
-            assert (currIter == a6Iter);
-            return a6Iter.next(); 
-
+            throw new NoSuchElementException();
         }
         public void set(GameBonus gb) {
             throw new UnsupportedOperationException();

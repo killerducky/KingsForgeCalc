@@ -24,7 +24,7 @@ public class GameBonus {
     public GameBonus(Bonus name) {
     	this.name = name;
     	if (name == Bonus.WD) {
-    		white_die_value = Math.abs(random.nextInt() % 6) + 1;
+    		rollWhiteDie();
     	}
     }
     
@@ -72,8 +72,12 @@ public class GameBonus {
     public void resetAssignmentsAndReroll() {
         resetAssignmentsDoNotReroll();
     	if (name == Bonus.WD) {
-    		white_die_value = Math.abs(random.nextInt() % 6) + 1;
+    	    rollWhiteDie();
     	}
+    }
+    
+    public void rollWhiteDie() {
+        white_die_value = Math.abs(random.nextInt() % 6) + 1;
     }
     
     public void resetAssignmentsDoNotReroll() {
