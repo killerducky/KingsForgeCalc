@@ -1,13 +1,11 @@
 package com.olsen.andy.kingsforgecalc;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
 public class GameBonus {
     private Bonus name;
-    private List<GameObject> targetList = new ArrayList<GameObject>();
     private Integer white_die_value;
 	Random random = new Random(new Date().getTime());  // TODO should this be like some super global thing?
 	
@@ -54,23 +52,7 @@ public class GameBonus {
     	return str;
     }
     
-    public boolean allUsed() {
-    	if (name == Bonus.A1TO6) {
-    		return false;  // no limit
-    	}
-      	if (name == Bonus.P1X3) {
-    		return (targetList.size() == 3);
-    	} else {
-    		return (targetList.size() == 1);
-    	}
-    }
-    
-    public void addTarget(GameObject go) {
-    	targetList.add(go);
-    }
-    
     public void resetAssignmentsAndReroll() {
-        resetAssignmentsDoNotReroll();
     	if (name == Bonus.WD) {
     	    rollWhiteDie();
     	}
@@ -78,10 +60,6 @@ public class GameBonus {
     
     public void rollWhiteDie() {
         white_die_value = Math.abs(random.nextInt() % 6) + 1;
-    }
-    
-    public void resetAssignmentsDoNotReroll() {
-    	targetList.clear();
     }
     
     public Integer applyBonus(Integer value) {

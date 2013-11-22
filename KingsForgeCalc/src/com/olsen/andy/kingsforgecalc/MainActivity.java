@@ -220,16 +220,24 @@ public class MainActivity extends Activity {
     }
     
     public void doRollout1(View view) {
-    	doRollout(1, new Rollout(sharedPref));
+        if (sharedPref.getBoolean("pref_debug_all_1s", false)) {
+            doRollout(1, new RollAll1s(sharedPref));
+        } else {
+            doRollout(1, new Rollout(sharedPref));
+        }
     }
 
     public void doRollout(View view) {
-    	doRollout(NUM_ROLLS, new Rollout(sharedPref));
+        if (sharedPref.getBoolean("pref_debug_all_1s", false)) {
+            doRollout(NUM_ROLLS, new RollAll1s(sharedPref));
+        } else {
+            doRollout(NUM_ROLLS, new Rollout(sharedPref));
+        }
     }
         
     public void doRollout(Integer totalRolls, Rollout rollout) {
     	HashMap<GameObject.GOColor, Integer> supplyHashInt = new HashMap<GameObject.GOColor, Integer>();
-    	HashMap<GameObject.GOColor, List<GameObject>> neededHashList = new HashMap<GameObject.GOColor, List<GameObject>>();
+    	DiceHashList neededHashList = new DiceHashList();
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
     		neededHashList.put(color, new ArrayList<GameObject>());
     	}
@@ -299,11 +307,11 @@ public class MainActivity extends Activity {
         }
     }
     
-    HashMap<GameObject.GOColor, List<GameObject>> neededHashList = new HashMap<GameObject.GOColor, List<GameObject>>();
+    DiceHashList neededHashList = new DiceHashList();
 
     class CustomRollout extends Rollout {
-        private HashMap<GameObject.GOColor, List<GameObject>> rolledHashList;
-        public CustomRollout(SharedPreferences sharedPref, HashMap<GameObject.GOColor, List<GameObject>> rolledHashList) {
+        private DiceHashList rolledHashList;
+        public CustomRollout(SharedPreferences sharedPref, DiceHashList rolledHashList) {
             super(sharedPref);
             this.rolledHashList = rolledHashList;
         }
@@ -477,9 +485,9 @@ public class MainActivity extends Activity {
         doRollout(1, testRollout);
     }
     
-    private HashMap<GameObject.GOColor, List<GameObject>> diceHashListBuilder(
+    private DiceHashList diceHashListBuilder(
             List<Integer> black, List<Integer> green, List<Integer> red, List<Integer> blue) {
-        HashMap<GameObject.GOColor, List<GameObject>> diceHashList = new HashMap<GameObject.GOColor, List<GameObject>>();
+        DiceHashList diceHashList = new DiceHashList();
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             diceHashList.put(color, new ArrayList<GameObject>());
         }

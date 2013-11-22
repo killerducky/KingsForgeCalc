@@ -11,17 +11,17 @@ import java.util.Random;
 import android.content.SharedPreferences;
 
 public class Rollout {
-    public SharedPreferences sharedPref;
+    private SharedPreferences sharedPref;
 
     private Random random = new Random(new Date().getTime());
     private String log;
     private boolean log_enable;
 
-    private HashMap<GameObject.GOColor, List<GameObject>> neededHashList;
-    private HashMap<GameObject.GOColor, List<GameObject>> rolledHashList;
-    private HashMap<GameObject.GOColor, List<GameObject>> rerollHashList;
+    private DiceHashList neededHashList;
+    private DiceHashList rolledHashList;
+    private DiceHashList rerollHashList;
+    private HashMap<GameObject.GOColor, Integer> supplyHashInt;
 
-    private List<GameBonus> bonusList;
     private GameBonusHashList bonusListHash;
 
     public Rollout(SharedPreferences sharedPref) {
@@ -29,7 +29,7 @@ public class Rollout {
     }
 
     public HashMap<String, String> doRollout(
-            HashMap<GameObject.GOColor, List<GameObject>> neededHashList,
+            DiceHashList neededHashList,
             HashMap<GameObject.GOColor, Integer> supplyHashInt, 
             List<GameBonus> bonusList, 
             Integer totalRolls
@@ -39,12 +39,11 @@ public class Rollout {
         String result = "";
         log = ""; // initialize log
         long startTime = System.currentTimeMillis();
-        this.rolledHashList = new HashMap<GameObject.GOColor, List<GameObject>>();
-        this.rerollHashList  = new HashMap<GameObject.GOColor, List<GameObject>>();
+        this.rolledHashList = new DiceHashList();
+        this.rerollHashList  = new DiceHashList();
         this.bonusListHash   = new GameBonusHashList();
         this.neededHashList = neededHashList;
-        this.bonusList = bonusList;
-
+        this.supplyHashInt  = supplyHashInt;
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             diceDeficit += Math.max(0, neededHashList.get(color).size() - supplyHashInt.get(color));
         }
@@ -64,55 +63,18 @@ public class Rollout {
                 for (GameBonus bonus : bonusList) { 
                     bonus.resetAssignmentsAndReroll();  // after refactoring only really need the reroll part
                 }
-                if (log_enable) { 
-                    log += "\nBonuses=" + bonusListHash;
-                    log += "\nIterate GBHL"; 
-                    for (GameBonus gb : bonusListHash) {
-                        log += "\n" + gb;
-                    }
-                }
+                if (log_enable) { log += "\nBonuses=" + bonusListHash; }
 
-                boolean success = true;
-
-                // Roll all normal dice
-                for (GameObject.GOColor color : GameObject.GOColor.values()) {
-                    List<GameObject> rolls = roll(color, supplyHashInt.get(color));
-                    Collections.sort(rolls);
-                    Collections.reverse(rolls);
-                    // Move extra dice into the rerollHashList
-                    Integer numNeeded = neededHashList.get(color).size();
-                    if (rolls.size() > numNeeded) {
-                        List<GameObject> extraRolls = rolls.subList(numNeeded, rolls.size());
-                        rolls.subList(numNeeded, rolls.size()).clear();
-                        rerollHashList.put(color, extraRolls);
-                    }
-                    rolledHashList.put(color, rolls);
-                }
-                if (log_enable) { log += "\nRolled:" + rolledHashList + "\n"; }
-
-                // Apply bonuses
-                if (bonusListHash.get(GameBonus.Bonus.A1TO6).size() > 0) {
-                    for (GameObject.GOColor color : GameObject.GOColor.values()) {
-                        List<GameObject> rolls = rolledHashList.get(color);
-                        for (GameObject go : rolls) {
-                            if (go.getOrigValue() == 1) {
-                                go.applyBonus(bonusListHash.get(GameBonus.Bonus.A1TO6).get(0));  // use the first one.  more than one is redundant 
-                            }
-                        }               
-                        Collections.sort(rolls);
-                        Collections.reverse(rolls);
-                    }
-                }
-                if (log_enable) { log += "\nAfter 1->6:" + rolledHashList + "\n"; }
-                doBonusWD();
-                if (log_enable) { log += "\nAfter WD:" + rolledHashList + "\n"; }
+                rollAllNormalDice();
+                applyA1TO6();
                 setupRecursion();
                 recursion();
                 if (log_enable) { log += "\ndbgCount=" + dbgCount; }
+                if (!recursionSuccess) {
+                    rerollDice();
+                }
                 // TODO: reroll
-                success = recursionSuccess;
-
-                if (success) { successes++; }
+                if (recursionSuccess) { successes++; }
             }
         }
         if (result == "") { 
@@ -132,6 +94,45 @@ public class Rollout {
         resultHash.put("log",  log);
         return resultHash;
     }
+    
+    void rerollDice() {
+        
+    }
+
+    void rollAllNormalDice() {
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            List<GameObject> rolls = roll(color, supplyHashInt.get(color));
+            Collections.sort(rolls);
+            Collections.reverse(rolls);
+            // Move extra dice into the rerollHashList
+            Integer numNeeded = neededHashList.get(color).size();
+            if (rolls.size() > numNeeded) {
+                List<GameObject> extraRolls = rolls.subList(numNeeded, rolls.size());
+                rolls.subList(numNeeded, rolls.size()).clear();
+                rerollHashList.put(color, extraRolls);
+            }
+            rolledHashList.put(color, rolls);
+        }
+        if (log_enable) { log += "\nRolled:" + rolledHashList + "\n"; }
+    }
+
+    
+    void applyA1TO6() {
+        if (bonusListHash.get(GameBonus.Bonus.A1TO6).size() > 0) {
+            for (GameObject.GOColor color : GameObject.GOColor.values()) {
+                List<GameObject> rolls = rolledHashList.get(color);
+                for (GameObject go : rolls) {
+                    if (go.getOrigValue() == 1) {
+                        go.applyBonus(bonusListHash.get(GameBonus.Bonus.A1TO6).get(0));  // use the first one.  more than one is redundant 
+                    }
+                }               
+                Collections.sort(rolls);
+                Collections.reverse(rolls);
+            }
+        }
+        if (log_enable) { log += "\nAfter 1->6:" + rolledHashList + "\n"; }
+    }
+
 
     // Permute each bonus to every color/die
     // Order is important:
@@ -149,8 +150,8 @@ public class Rollout {
         iterator = bonusListHash.iterator();
     }
     
-    
     private void recursion() {
+        dbgCount++;
         if (log_enable) { log += "\nrecursion start"; }
         if (iterator.hasNext()) {
             GameBonus gb = iterator.next();
@@ -161,20 +162,20 @@ public class Rollout {
                 iterator.previous();
             }
             if (gb.getBonusType() == GameBonus.Bonus.WD) {
-                // TODO: Move WD from custom code to here. 
-                // For now WD is handled outside this, just continue down the recursion
-                recursion();
+                doBonusWD(gb);
                 iterator.previous();
             } else if (gb.getBonusType() == GameBonus.Bonus.P2 || gb.getBonusType() == GameBonus.Bonus.A6 ) {
                 for (GameObject.GOColor color : GameObject.GOColor.values()) {
                     List<GameObject> needed = neededHashList.get(color);
-                    if (needed.size() == 0) {
+                    List<GameObject> rolls  = rolledHashList.get(color);
+                    if (needed.size() == 0 || rolls.size() == 0) {
+                        // rolls.size()==0 can happen if the white die isn't here yet
                         continue;
                     }
-                    List<GameObject> rolls  = rolledHashList.get(color);
                     // usually, apply the bonus to each die in order, up to the number needed
+                    // pick the minimum of needed vs rolls, they may not match if we're going to use a white die to fill the gap later
                     int start = 0;
-                    int end   = needed.size();
+                    int end   = Math.min(needed.size(), rolls.size());
                     // but only apply A6 to the lowest die needed doing more wouldn't break, but is unneeded work
                     if (gb.getBonusType() == GameBonus.Bonus.A6) {
                         start = end-1;
@@ -192,11 +193,11 @@ public class Rollout {
                 }
                 // after looping through all colors and rolls, undo
                 iterator.previous();
-                if (log_enable) { log += "\nprevious=" + gb; }
+                if (log_enable) { log += "\nprevious= " + gb; }
             } else if (gb.getBonusType() == GameBonus.Bonus.P1X3
                     || gb.getBonusType() == GameBonus.Bonus.P1) {
                 applyBestBonus(gb);
-                if (log_enable) { log += "\nAfter applying P1X3" + rolledHashList; }
+                if (log_enable) { log += "\nAfter applying P1X3 " + rolledHashList; }
                 recursion();
                 // dumb algorithm to just remove it from wherever it got put
                 for (GameObject.GOColor color : GameObject.GOColor.values()) {
@@ -204,7 +205,7 @@ public class Rollout {
                         roll.removeBonusIfMatch(gb);
                     }
                 }
-                if (log_enable) { log += "\nAfter removing all P1 types" + rolledHashList; }
+                if (log_enable) { log += "\nAfter removing all P1 types " + rolledHashList; }
                 iterator.previous();
 
             } else {
@@ -214,7 +215,6 @@ public class Rollout {
             }
         } else {  // All bonuses assigned, check this combination
             if (log_enable) { log += "\nAfter bonuses: " + rolledHashList; }
-            dbgCount++;
             for (GameObject.GOColor color : GameObject.GOColor.values()) {
                 List<GameObject> tmpRolled = new ArrayList<GameObject>(rolledHashList.get(color));
                 List<GameObject> needed = neededHashList.get(color);
@@ -231,36 +231,37 @@ public class Rollout {
         }
     }
 
-    private void doBonusWD() {
-        for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
-            for (GameObject.GOColor color : GameObject.GOColor.values()) {
-                List<GameObject> rolls = rolledHashList.get(color);
-                List<GameObject> needed = neededHashList.get(color);
-                if (needed.size() == 0) { 
-                    continue;
-                }
-                if (needed.size() > rolls.size()) {
-                    // if we didn't have enough of this color, add the white die here
+    private void doBonusWD(GameBonus gb) {
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            List<GameObject> rolls = rolledHashList.get(color);
+            List<GameObject> needed = neededHashList.get(color);
+            if (needed.size() == 0) { 
+                continue;
+            }
+            if (needed.size() > rolls.size()) {
+                // if we didn't have enough of this color, add the white die here
+                log += "\nUse: " + gb.toString() + "on:" + color;
+                GameObject go = new GameObject(1, color);
+                go.applyBonus(gb); 
+                rolls.add(go);
+                recursion();
+                go.removeBonus(gb);
+                break; // It's required to use the white die here, so just quit now
+            } else {
+                if (rolls.get(needed.size()-1).getCurrValue() < gb.applyBonus(null)) {
                     log += "\nUse: " + gb.toString() + "on:" + color;
-                    GameObject go = new GameObject(1, color);
-                    go.applyBonus(gb); 
-                    rolls.add(go);
-                    break;
-                } else {
-                    if (rolls.get(needed.size()-1).getCurrValue() < gb.applyBonus(null)) {
-                        rolls.get(needed.size()-1).applyBonus(gb);
-                        Collections.sort(rolls);
-                        Collections.reverse(rolls);
-                        // FIXME: Improve by trying other colors too
-                        break;
-                    }
+                    rolls.get(needed.size()-1).applyBonus(gb);
+                    Collections.sort(rolls);
+                    Collections.reverse(rolls);
+                    recursion();
+                    rolls.get(needed.size()-1).removeBonus(gb);
                 }
             }
         }
     }
-    
+
     // find the die that is farthest from it's goal (largestDeficit) and apply the bonus to it
-    private HashMap<GameObject.GOColor, List<GameObject>> applyBestBonusSortedCopy;
+    private DiceHashList applyBestBonusSortedCopy;
     Integer largestDeficit;
     GameObject.GOColor saveColor;
     Integer saveIndex;
@@ -272,7 +273,7 @@ public class Rollout {
     private void applyBestBonus(GameBonus gb) {
         // This part of the algorithm needs to always have a sorted copy
         // But if we sort in place, the recursion algorithm above this gets confused.
-        applyBestBonusSortedCopy = new HashMap<GameObject.GOColor, List<GameObject>>();
+        applyBestBonusSortedCopy = new DiceHashList();
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             applyBestBonusSortedCopy.put(color, new ArrayList<GameObject>(rolledHashList.get(color)));
         }
@@ -350,20 +351,23 @@ public class Rollout {
         }
     }
 
-    private boolean checkSuccess() {
-        for (GameObject.GOColor color : GameObject.GOColor.values()) {
-            List<GameObject> rolled = rolledHashList.get(color);
-            List<GameObject> needed = neededHashList.get(color);
-            for (int i=0; i < needed.size(); i++) {
-                if (rolled.get(i).getCurrValue() < needed.get(i).getCurrValue()) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+//    private boolean checkSuccess() {
+//        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+//            List<GameObject> rolled = rolledHashList.get(color);
+//            List<GameObject> needed = neededHashList.get(color);
+//            for (int i=0; i < needed.size(); i++) {
+//                if (rolled.get(i).getCurrValue() < needed.get(i).getCurrValue()) {
+//                    return false;
+//                }
+//            }
+//        }
+//        return true;
+//    }
 
     private boolean checkSuccess2(List<GameObject> rolled, List<GameObject> needed) {
+        if (rolled.size() < needed.size()) {
+            return false;
+        }
         for (int i=0; i < needed.size(); i++) {
             if (rolled.get(i).getCurrValue() < needed.get(i).getCurrValue()) {
                 return false;
@@ -388,18 +392,18 @@ public class Rollout {
         return rolls;
     }
 
-    private String diceHashListToString(HashMap<GameObject.GOColor, List<Integer>> diceHashList) {
-        String log = "\n";
-        for (GameObject.GOColor color : GameObject.GOColor.values()) {
-            log += rollsToString(color, diceHashList.get(color)) + " ";
-        }
-        return log;
-    }
+//    private String diceHashListToString(HashMap<GameObject.GOColor, List<Integer>> diceHashList) {
+//        String log = "\n";
+//        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+//            log += rollsToString(color, diceHashList.get(color)) + " ";
+//        }
+//        return log;
+//    }
 
-    private String rollsToString(GameObject.GOColor color, List<Integer> rolls) {
-        String log;
-        log = color + ":" + rolls; 
-        return log;
-    }
+//    private String rollsToString(GameObject.GOColor color, List<Integer> rolls) {
+//        String log;
+//        log = color + ":" + rolls; 
+//        return log;
+//    }
 
 }
