@@ -62,6 +62,10 @@ public class GameBonus {
         white_die_value = Math.abs(random.nextInt() % 6) + 1;
     }
     
+    public Integer getWhiteDieValue() {
+        return white_die_value;
+    }
+    
     public Integer applyBonus(Integer value) {
     	switch(name) {
     	case A1TO6: return (value==1) ? 6 : value;

@@ -5,6 +5,9 @@ import java.util.List;
 
 @SuppressWarnings("serial")
 public class DiceHashList extends HashMap<GameObject.GOColor, List<GameObject>> {
+    DiceHashList() {
+        super();
+    }
     @Override
     public String toString() {
         String str = "";
