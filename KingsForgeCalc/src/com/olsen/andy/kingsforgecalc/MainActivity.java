@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -283,8 +284,6 @@ public class MainActivity extends Activity {
     // Black 632 , supply 3 black, P2, P1, P1, roll 521.  -- you must P2 on the 1
     // Black 652 , supply 3 black, P2, P1, P1, roll 541.  -- you must P2 on the 4
 
-    int testCaseNum = -1;
-    Rollout testRollout;
     class RollAll1s extends Rollout {
         public RollAll1s(SharedPreferences sharedPref) {
             super(sharedPref);
@@ -320,11 +319,13 @@ public class MainActivity extends Activity {
             return rolls;
         }
     }
+
+    interface SetupTest {
+        public void setupTest();
+    }
     
-    private void pickTest() {
-        testCaseNum = (testCaseNum == -1 || testCaseNum==4) ? 0 : testCaseNum+1;
-        switch(testCaseNum) {
-        case 0:        
+    class TestPerformance implements SetupTest {
+        public void setupTest() {
             ccd_adapter.setSelectedPos(null);
             craftcard_die.clear();
             craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
@@ -342,8 +343,11 @@ public class MainActivity extends Activity {
             supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
             supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
             testRollout = new Rollout(sharedPref);
-            break;
-        case 1:
+        }
+    }
+    
+    class TestP2Pass implements SetupTest {
+        public void setupTest() {
             ccd_adapter.setSelectedPos(null);
             craftcard_die.clear();
             craftcard_die.add(new GameObject(2, GameObject.GOColor.BLACK));
@@ -356,8 +360,11 @@ public class MainActivity extends Activity {
             supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
             supply_die.add(new GameBonus(GameBonus.Bonus.P1));
             testRollout = new RollAll1s(sharedPref);
-            break;
-        case 2:
+        }
+    }
+    
+    class TestP2Fail implements SetupTest {
+        public void setupTest() {
             ccd_adapter.setSelectedPos(null);
             craftcard_die.clear();
             craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
@@ -371,8 +378,11 @@ public class MainActivity extends Activity {
             supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
             supply_die.add(new GameBonus(GameBonus.Bonus.P2));
             testRollout = new RollAll1s(sharedPref);
-            break;
-        case 3:
+        }
+    }
+    
+    class TestP2P1A implements SetupTest {
+        public void setupTest() {
             // Black 632 , supply 3 black, P2, P1, roll 521.  -- you must P2 on the 1
             supply_adapter.notifyDataSetChanged();
             ccd_adapter.setSelectedPos(null);
@@ -393,8 +403,11 @@ public class MainActivity extends Activity {
                     sharedPref, 
                     diceHashListBuilder(Arrays.asList(5,2,1), new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Integer>())
                     );
-            break;
-        case 4:
+        }
+    }
+    
+    class TestP2P1B implements SetupTest {
+        public void setupTest() {
             // Black 652 , supply 3 black, P2, P1, roll 541.  -- you must P2 on the 4
             supply_adapter.notifyDataSetChanged();
             ccd_adapter.setSelectedPos(null);
@@ -415,8 +428,46 @@ public class MainActivity extends Activity {
                     sharedPref, 
                     diceHashListBuilder(Arrays.asList(5,4,1), new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Integer>())
                     );
-            break;
         }
+    }
+    
+    class TestWD implements SetupTest {
+        public void setupTest() {
+            supply_adapter.notifyDataSetChanged();
+            ccd_adapter.setSelectedPos(null);
+            craftcard_die.clear();
+            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+            craftcard_die.add(new GameObject(6, GameObject.GOColor.GREEN));
+            ccd_adapter.notifyDataSetChanged();
+            supply_adapter.setSelectedPos(null);
+            supply_die.clear();
+            supply_die.add(new GameObject(0, GameObject.GOColor.BLACK, 0, 50));
+            supply_die.add(new GameObject(1, GameObject.GOColor.GREEN, 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+            supply_die.add(new GameBonus(GameBonus.Bonus.WD));
+            supply_die.add(new GameBonus(GameBonus.Bonus.A6));
+            supply_die.add(new GameBonus(GameBonus.Bonus.A6));
+            testRollout = new RollAll1s(sharedPref);
+        }
+    }
+    
+    List<SetupTest> setupTests = new ArrayList<SetupTest>();
+    Iterator<SetupTest> testIter;
+    Rollout testRollout;
+    private void pickTest() {
+        if (testRollout == null) {
+            setupTests.add(new TestWD());
+            setupTests.add(new TestP2P1A());
+            setupTests.add(new TestP2P1B());
+            setupTests.add(new TestPerformance());
+            setupTests.add(new TestP2Pass());
+            setupTests.add(new TestP2Fail());
+            testIter = setupTests.iterator();
+        }
+        // if at end, restart
+        if (!testIter.hasNext()) { testIter = setupTests.iterator(); }
+        testIter.next().setupTest();
     }
     
     private void runTest() {

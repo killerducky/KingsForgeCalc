@@ -34,7 +34,7 @@ public class Rollout {
             List<GameBonus> bonusList, 
             Integer totalRolls
             ) {
-        boolean haveEnoughDice = true;
+        Integer diceDeficit = 0;
         Integer successes = 0;
         String result = "";
         log = ""; // initialize log
@@ -46,10 +46,7 @@ public class Rollout {
         this.bonusList = bonusList;
 
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
-            if (neededHashList.get(color).size() > supplyHashInt.get(color)) {
-                haveEnoughDice = false;
-                break;
-            }
+            diceDeficit += Math.max(0, neededHashList.get(color).size() - supplyHashInt.get(color));
         }
 
         for (GameBonus.Bonus bonusType : GameBonus.Bonus.values()) {
@@ -59,6 +56,7 @@ public class Rollout {
             bonusListHash.get(bonus.getBonusType()).add(bonus);
         }
 
+        boolean haveEnoughDice = diceDeficit <= bonusListHash.get(GameBonus.Bonus.WD).size();
         if (haveEnoughDice) {
             for (int x = 0; x < totalRolls; x++) {
                 log_enable = (x==0 && sharedPref.getBoolean("pref_debug_log_enable",  false)); // only log the first run
