@@ -126,8 +126,8 @@ public class MainActivity extends Activity {
 
     	if (ccd_adapter.getSelectedPos() != null) {
         	GameObject go = (GameObject) craftcard_die.get((int) ccd_adapter.getSelectedPos());
-    		if      ("+".equals(str)) { go.setValue(go.getValue() + 1); }
-    		else if ("-".equals(str)) { go.setValue(go.getValue() - 1); }
+    		if      ("+".equals(str)) { go.setOrigValue(go.getOrigValue() + 1); }
+    		else if ("-".equals(str)) { go.setOrigValue(go.getOrigValue() - 1); }
     		else if ("X".equals(str)) { 
     			craftcard_die.remove((int) ccd_adapter.getSelectedPos());  // XXX: omg Integer objects mess things up here, cast to int
     			if (craftcard_die.size()==0) {
@@ -169,9 +169,9 @@ public class MainActivity extends Activity {
     		Object selectedO = supply_die.get(supply_adapter.getSelectedPos());
     		if (selectedO instanceof GameObject) {
     			GameObject go = (GameObject) selectedO;
-    			if      ("+".equals(clickedO.toString())) { go.setValue(go.getValue() + 1); }
-    			else if ("-".equals(clickedO.toString())) { go.setValue(go.getValue() - 1); }
-    			else if ("X".equals(clickedO.toString())) { go.setValue(0);                 }
+    			if      ("+".equals(clickedO.toString())) { go.setOrigValue(go.getOrigValue() + 1); }
+    			else if ("-".equals(clickedO.toString())) { go.setOrigValue(go.getOrigValue() - 1); }
+    			else if ("X".equals(clickedO.toString())) { go.setOrigValue(0);                 }
     		} else {
                 // Handle bonuses, which right now are just strings
                 if ("X".equals(clickedO.toString())) {  
@@ -223,16 +223,16 @@ public class MainActivity extends Activity {
         
     public void doRollout(View view, Integer totalRolls) {
     	HashMap<GameObject.GOColor, Integer> supplyHashInt = new HashMap<GameObject.GOColor, Integer>();
-    	HashMap<GameObject.GOColor, List<Integer>> neededHashList = new HashMap<GameObject.GOColor, List<Integer>>();
+    	HashMap<GameObject.GOColor, List<GameObject>> neededHashList = new HashMap<GameObject.GOColor, List<GameObject>>();
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
-    		neededHashList.put(color, new ArrayList<Integer>());
+    		neededHashList.put(color, new ArrayList<GameObject>());
     	}
     	List<GameBonus> bonusList = new ArrayList<GameBonus>();
     	
     	// get craft requirements out of the widgets
     	for (Object o : craftcard_die) {
     		GameObject go = (GameObject) o;
-    		neededHashList.get(go.getColor()).add(go.getValue());
+    		neededHashList.get(go.getColor()).add(go);
     	}
 
         // TODO: hacky but the GameObjects are the dice
@@ -240,7 +240,7 @@ public class MainActivity extends Activity {
     	for (Object o : supply_die) {
     		if (o instanceof GameObject) {
     			GameObject go = (GameObject) o;
-    			supplyHashInt.put(go.getColor(), go.getValue());
+    			supplyHashInt.put(go.getColor(), go.getOrigValue());
     		} else {
     			bonusList.add((GameBonus) o);
     		}
@@ -292,24 +292,45 @@ public class MainActivity extends Activity {
     //
     // TODO: more tests:
     // Black 4333, supply 4 black, P1X3:3, roll 1s.  Should pass 100%
-    //
+    // Black 632 , supply 3 black, P2, P1, P1, roll 521.  -- you must P2 on the 1
+    // Black 652 , supply 3 black, P2, P1, P1, roll 541.  -- you must P2 on the 4
+
+    int test=0;
     private void doTest2() {
-    	ccd_adapter.setSelectedPos(null);
-    	craftcard_die.clear();
-    	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-    	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-    	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-    	ccd_adapter.notifyDataSetChanged();
-    	supply_adapter.setSelectedPos(null);
-    	supply_die.clear();
-    	supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
-    	supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
-    	supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
-    	supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
-    	supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-    	supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-    	supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-    	supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-    	supply_adapter.notifyDataSetChanged();
+        switch(test) {
+        case 0:        
+            ccd_adapter.setSelectedPos(null);
+            craftcard_die.clear();
+            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+            ccd_adapter.notifyDataSetChanged();
+            supply_adapter.setSelectedPos(null);
+            supply_die.clear();
+            supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+            break;
+        case 1:
+            ccd_adapter.setSelectedPos(null);
+            craftcard_die.clear();
+            craftcard_die.add(new GameObject(2, GameObject.GOColor.BLACK));
+            ccd_adapter.notifyDataSetChanged();
+            supply_adapter.setSelectedPos(null);
+            supply_die.clear();
+            supply_die.add(new GameObject(1, GameObject.GOColor.BLACK, 0, 50));   
+            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+            supply_die.add(new GameBonus(GameBonus.Bonus.P1));
+            break;
+        }
+        supply_adapter.notifyDataSetChanged();
+        test = (test==1) ? 0 : test+1;
     }
 }

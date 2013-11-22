@@ -93,14 +93,11 @@ public class GameBonus {
     	}
     }
     
-    public void apply1to6(List<Integer> rolls) {
+    public void apply1to6(List<GameObject> rolls) {
     	if (name != Bonus.A1TO6) { return; }
-//    	for (Integer roll : rolls) {
-//    		if (roll == 1) { roll = 6; } // FIXME iterating over integers does not change them.  :(
-//    	}
         for (int i = 0; i < rolls.size(); i++) {
-        	if (rolls.get(i) == 1) {
-        		rolls.set(i, 6);
+        	if (rolls.get(i).getCurrValue() == 1) {
+        		rolls.get(i).applyBonus(this);
         	}
         }
     }
@@ -116,5 +113,7 @@ public class GameBonus {
     	//throw new Exception("impossible");
     	return 8;
     }
+
+    public Integer getNumDups() { return (name == Bonus.P1X3) ? 3 : 1; }
 }
 

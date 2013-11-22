@@ -40,7 +40,7 @@ public class CraftDieAdapter extends ArrayAdapter<Object> {
 			//case WHITE: tv.setBackgroundColor(Color.WHITE); break;
 			}
 			if (selected_pos != null && pos == selected_pos) {
-				tv.setText(">" + go.getValue() + "<");
+				tv.setText(">" + go.getOrigValue() + "<");
 			}
 			switch (go.getColor()) {
 			//case WHITE: tv.setTextColor(Color.BLACK); break;
