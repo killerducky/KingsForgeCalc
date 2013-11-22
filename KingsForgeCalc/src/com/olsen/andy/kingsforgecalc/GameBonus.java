@@ -34,7 +34,7 @@ public class GameBonus {
     		white_die_value = o.white_die_value;  // TODO should I reroll on object copies?  Probably no...
     	}
     }
-    
+
     public Bonus getBonusType() { return name; }
 
     public String toString() {

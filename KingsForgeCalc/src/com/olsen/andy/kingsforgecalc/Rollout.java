@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Random;
 
 import android.content.SharedPreferences;
@@ -15,19 +16,18 @@ public class Rollout {
     private Random random = new Random(new Date().getTime());
     private String log;
     private boolean log_enable;
-    
+
     private HashMap<GameObject.GOColor, List<GameObject>> neededHashList;
     private HashMap<GameObject.GOColor, List<GameObject>> rolledHashList2;
     private HashMap<GameObject.GOColor, List<GameObject>> rerollHashList;
 
     private List<GameBonus> bonusList;
-    private HashMap<GameBonus.Bonus, List<GameBonus>> bonusListHash;
-    
-    
+    private GameBonusHashList bonusListHash;
+
     public Rollout(SharedPreferences sharedPref) {
         this.sharedPref = sharedPref;
     }
-    
+
     public HashMap<String, String> doRollout(
             HashMap<GameObject.GOColor, List<GameObject>> neededHashList,
             HashMap<GameObject.GOColor, Integer> supplyHashInt, 
@@ -41,7 +41,7 @@ public class Rollout {
         long startTime = System.currentTimeMillis();
         this.rolledHashList2 = new HashMap<GameObject.GOColor, List<GameObject>>();
         this.rerollHashList  = new HashMap<GameObject.GOColor, List<GameObject>>();
-        this.bonusListHash   = new HashMap<GameBonus.Bonus, List<GameBonus>>();
+        this.bonusListHash   = new GameBonusHashList();
         this.neededHashList = neededHashList;
         this.bonusList = bonusList;
 
@@ -51,26 +51,32 @@ public class Rollout {
                 break;
             }
         }
-        
+
         for (GameBonus.Bonus bonusType : GameBonus.Bonus.values()) {
             bonusListHash.put(bonusType, new ArrayList<GameBonus>());
         }
         for (GameBonus bonus : bonusList) {
             bonusListHash.get(bonus.getBonusType()).add(bonus);
         }
-        
+
         if (haveEnoughDice) {
             for (int x = 0; x < totalRolls; x++) {
                 log_enable = (x==0 && sharedPref.getBoolean("pref_debug_log_enable",  false)); // only log the first run
                 if (log_enable) { log += "Bonuses:"; } 
 
+                if (log_enable) { 
+                    log += "\nIterate GBHL"; 
+                    for (GameBonus gb : bonusListHash) {
+                        log += "\n" + gb;
+                    }
+                }
+
                 // reset bonuses and reroll the white die
                 for (GameBonus bonus : bonusList) { 
-                    if (log_enable) { log += " " + bonus.toString(); }
                     bonus.resetAssignmentsAndReroll();  // after refactoring only really need the reroll part
                 }
                 boolean success = true;
-                
+
                 // Roll all normal dice
                 for (GameObject.GOColor color : GameObject.GOColor.values()) {
                     List<GameObject> rolls = roll(color, supplyHashInt.get(color));
@@ -107,7 +113,7 @@ public class Rollout {
                 if (log_enable) { log += "\ndbgCount=" + dbgCount; }
                 // TODO: reroll
                 success = recursionSuccess;
-                
+
                 if (success) { successes++; }
             }
         }
@@ -135,24 +141,24 @@ public class Rollout {
     // 2) A6
     // 3) most others
     // 4) reroll (handled outside of this routine though)
-    
-    private Integer currBonusIndex;
+
+    private ListIterator<GameBonus> iterator;
     private boolean recursionSuccess;
     private Integer dbgCount; 
     private void setupRecursion() {
-        currBonusIndex = 0;
         recursionSuccess = false;
         dbgCount = 0;
+        iterator = bonusListHash.iterator();
     }
-    
+
     private void recursion() {
-        if (currBonusIndex < bonusList.size()) { // Until we have assigned all the bonuses, keep going
-            GameBonus gb = bonusList.get(currBonusIndex);
+        if (log_enable) { log += "\nrecusion start"; }
+        if (iterator.hasNext()) {
+            GameBonus gb = iterator.next();
+            if (log_enable) { log += "\nnext=" + gb; }
             if (gb.getBonusType() == GameBonus.Bonus.RR) {
                 // RR is handled outside this
-                currBonusIndex++;
                 recursion();
-                currBonusIndex--;
             } else {
                 for (GameObject.GOColor color : GameObject.GOColor.values()) {
                     List<GameObject> needed = neededHashList.get(color);
@@ -176,19 +182,21 @@ public class Rollout {
                                 }
                             }
                             rolls.get(i).applyBonus(gb);
-                            currBonusIndex++;
+                            if (log_enable) { log += "\nAfter applying a bonus: " + rolledHashList2; }
                             recursion();
                             if (recursionSuccess) { 
                                 return;
                             }
                             rolls.get(i).removeBonus(gb);
-                            currBonusIndex--;
+                            if (log_enable) { log += "\nAfter removing a bonus: " + rolledHashList2; }
                         }
                     }
                 }
             }
+            iterator.previous();
+            if (log_enable) { log += "\nprevious=" + gb; }
         } else {  // All bonuses assigned, check this combination
-            //if (log_enable) { log += "\nAfter bonuses: " + rolledHashList2; }
+            if (log_enable) { log += "\nAfter bonuses: " + rolledHashList2; }
             dbgCount++;
             for (GameObject.GOColor color : GameObject.GOColor.values()) {
                 List<GameObject> tmpRolled = new ArrayList<GameObject>(rolledHashList2.get(color));
@@ -205,6 +213,11 @@ public class Rollout {
             return;
         }
     }
+
+//    private Object asList(Bonus wd) {
+//        // TODO Auto-generated method stub
+//        return null;
+//    }
 
     private void doBonusWD() {
         for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
@@ -245,10 +258,7 @@ public class Rollout {
     List<Integer> P1X3saveIndex;
     List<Integer> P1X3saveValue;
     private void applyBestBonus(GameBonus.Bonus bonusType) {
-        for (GameBonus gb : bonusList) {
-            if (gb.getBonusType() != bonusType) {
-                continue;
-            }
+        for (GameBonus gb : bonusListHash.get(bonusType)) {
             largestDeficit = Integer.MIN_VALUE;
             P1X3largestDeficit = new ArrayList<Integer>();
             P1X3saveColor = new ArrayList<GameObject.GOColor>();
@@ -392,5 +402,5 @@ public class Rollout {
         log = color + ":" + rolls; 
         return log;
     }
-    
+
 }

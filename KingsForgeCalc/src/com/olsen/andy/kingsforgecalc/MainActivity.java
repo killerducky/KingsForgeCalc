@@ -329,8 +329,22 @@ public class MainActivity extends Activity {
             supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
             supply_die.add(new GameBonus(GameBonus.Bonus.P1));
             break;
+        case 2:
+            ccd_adapter.setSelectedPos(null);
+            craftcard_die.clear();
+            craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
+            craftcard_die.add(new GameObject(1, GameObject.GOColor.BLACK));
+            ccd_adapter.notifyDataSetChanged();
+            supply_adapter.setSelectedPos(null);
+            supply_die.clear();
+            supply_die.add(new GameObject(2, GameObject.GOColor.BLACK, 0, 50));   
+            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+            supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+            break;
         }
         supply_adapter.notifyDataSetChanged();
-        test = (test==1) ? 0 : test+1;
+        test = (test==2) ? 0 : test+1;
     }
 }
