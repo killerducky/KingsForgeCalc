@@ -206,7 +206,7 @@ public class Rollout {
                         roll.removeBonusIfMatch(gb);
                     }
                 }
-                if (log_enable) { log += "\nAfter removing P1X3" + rolledHashList; }
+                if (log_enable) { log += "\nAfter removing all P1 types" + rolledHashList; }
                 iterator.previous();
 
             } else {
@@ -374,7 +374,7 @@ public class Rollout {
         return true;
     }
 
-    private List<GameObject> roll(GameObject.GOColor color, int amountToRoll) {
+    protected List<GameObject> roll(GameObject.GOColor color, int amountToRoll) {
         List<GameObject> rolls = new ArrayList<GameObject>();
         boolean debug_roll_all_1s = sharedPref.getBoolean("pref_debug_all_1s", false);
         if (log_enable) { log += "\ndebug_roll_all_1s=" + debug_roll_all_1s; }

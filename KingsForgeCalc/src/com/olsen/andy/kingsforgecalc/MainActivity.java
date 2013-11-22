@@ -1,6 +1,7 @@
 package com.olsen.andy.kingsforgecalc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -101,7 +102,8 @@ public class MainActivity extends Activity {
         for (GameBonus.Bonus bonus : GameBonus.Bonus.values()) {
             supply_tools.add(new GameBonus(bonus));
         }
-        supply_tools.add(new String("Test"));
+        supply_tools.add(new String("Pick Test"));
+        supply_tools.add(new String("Run Test"));
         GridView supplyT_gv = (GridView) findViewById(R.id.supply_tools);
         supplyT_adapter = new CraftToolsAdapter(this, supply_tools);
         supplyT_gv.setAdapter(supplyT_adapter);
@@ -188,9 +190,12 @@ public class MainActivity extends Activity {
     		supply_die.add(new GameBonus((GameBonus) clickedO));  // copy and add
     		supply_adapter.setSelectedPos(null);
     	} else {
-    		if ("Test".equals(clickedO.toString())) {
-    			doTest2();
+    		if ("Pick Test".equals(clickedO.toString())) {
+    			pickTest();
+    		} else if ("Run Test".equals(clickedO.toString())) {
+    		    runTest();
     		}
+    	
     	}
     	// TODO: currently inconsistent on who is responsible to call this
     	supply_adapter.notifyDataSetChanged();
@@ -214,14 +219,14 @@ public class MainActivity extends Activity {
     }
     
     public void doRollout1(View view) {
-    	doRollout(view, 1);
+    	doRollout(1, new Rollout(sharedPref));
     }
 
     public void doRollout(View view) {
-    	doRollout(view, NUM_ROLLS);
+    	doRollout(NUM_ROLLS, new Rollout(sharedPref));
     }
         
-    public void doRollout(View view, Integer totalRolls) {
+    public void doRollout(Integer totalRolls, Rollout rollout) {
     	HashMap<GameObject.GOColor, Integer> supplyHashInt = new HashMap<GameObject.GOColor, Integer>();
     	HashMap<GameObject.GOColor, List<GameObject>> neededHashList = new HashMap<GameObject.GOColor, List<GameObject>>();
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
@@ -251,7 +256,6 @@ public class MainActivity extends Activity {
     		Collections.reverse(neededHashList.get(color));
     	}
         
-    	Rollout rollout = new Rollout(sharedPref);  // TODO passing this is lame
     	HashMap<String, String> result = rollout.doRollout(neededHashList, supplyHashInt, bonusList, totalRolls);
 
     	TextView rolloutResults = (TextView) findViewById(R.id.rollout_results);
@@ -268,23 +272,6 @@ public class MainActivity extends Activity {
 
     }
 
-//    private void doTest() {
-//    	ccd_adapter.setSelectedPos(null);
-//    	craftcard_die.clear();
-//    	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-//    	ccd_adapter.notifyDataSetChanged();
-//    	supply_adapter.setSelectedPos(null);
-//    	supply_die.clear();
-//    	supply_die.add(new GameObject(1, GameObject.GOColor.BLACK, 0, 50));
-//    	supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
-//    	supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
-//    	supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
-//    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
-//    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
-//    	supply_die.add(new GameBonus(GameBonus.Bonus.P2));
-//    	supply_adapter.notifyDataSetChanged();
-//    }
-    
     // for a time test, require 3 black 6s, and have 4 "+1 (3)" bonuses
     // 1000 rolls
     // 16bd584526a9337112c93092ac681d3260d97640 - Time=0.54s,  Odds=59.04%
@@ -296,9 +283,47 @@ public class MainActivity extends Activity {
     // Black 632 , supply 3 black, P2, P1, P1, roll 521.  -- you must P2 on the 1
     // Black 652 , supply 3 black, P2, P1, P1, roll 541.  -- you must P2 on the 4
 
-    int test=0;
-    private void doTest2() {
-        switch(test) {
+    int testCaseNum = -1;
+    Rollout testRollout;
+    class RollAll1s extends Rollout {
+        public RollAll1s(SharedPreferences sharedPref) {
+            super(sharedPref);
+        }
+
+        @Override
+        protected List<GameObject> roll(GameObject.GOColor color, int amountToRoll) {
+            List<GameObject> rolls = new ArrayList<GameObject>();
+            for (int x = 0; x < amountToRoll; x++) {
+                rolls.add(new GameObject(1, color));
+            }
+            return rolls;
+        }
+    }
+    
+    HashMap<GameObject.GOColor, List<GameObject>> neededHashList = new HashMap<GameObject.GOColor, List<GameObject>>();
+
+    class CustomRollout extends Rollout {
+        private HashMap<GameObject.GOColor, List<GameObject>> rolledHashList;
+        public CustomRollout(SharedPreferences sharedPref, HashMap<GameObject.GOColor, List<GameObject>> rolledHashList) {
+            super(sharedPref);
+            this.rolledHashList = rolledHashList;
+        }
+
+        @Override
+        protected List<GameObject> roll(GameObject.GOColor color, int amountToRoll) {
+            List<GameObject> rolls = new ArrayList<GameObject>(rolledHashList.get(color));
+            // pad with extra rolls if necessary
+            // (having too many rolls is weird but won't hurt)
+            for (int x = rolls.size(); x < amountToRoll; x++) {
+                rolls.add(new GameObject(1, color));
+            }
+            return rolls;
+        }
+    }
+    
+    private void pickTest() {
+        testCaseNum = (testCaseNum == -1 || testCaseNum==4) ? 0 : testCaseNum+1;
+        switch(testCaseNum) {
         case 0:        
             ccd_adapter.setSelectedPos(null);
             craftcard_die.clear();
@@ -316,6 +341,7 @@ public class MainActivity extends Activity {
             supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
             supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
             supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+            testRollout = new Rollout(sharedPref);
             break;
         case 1:
             ccd_adapter.setSelectedPos(null);
@@ -329,6 +355,7 @@ public class MainActivity extends Activity {
             supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
             supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
             supply_die.add(new GameBonus(GameBonus.Bonus.P1));
+            testRollout = new RollAll1s(sharedPref);
             break;
         case 2:
             ccd_adapter.setSelectedPos(null);
@@ -343,9 +370,81 @@ public class MainActivity extends Activity {
             supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
             supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
             supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+            testRollout = new RollAll1s(sharedPref);
+            break;
+        case 3:
+            // Black 632 , supply 3 black, P2, P1, roll 521.  -- you must P2 on the 1
+            supply_adapter.notifyDataSetChanged();
+            ccd_adapter.setSelectedPos(null);
+            craftcard_die.clear();
+            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+            craftcard_die.add(new GameObject(3, GameObject.GOColor.BLACK));
+            craftcard_die.add(new GameObject(2, GameObject.GOColor.BLACK));
+            ccd_adapter.notifyDataSetChanged();
+            supply_adapter.setSelectedPos(null);
+            supply_die.clear();
+            supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+            supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+            supply_die.add(new GameBonus(GameBonus.Bonus.P1));
+            testRollout = new CustomRollout(
+                    sharedPref, 
+                    diceHashListBuilder(Arrays.asList(5,2,1), new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Integer>())
+                    );
+            break;
+        case 4:
+            // Black 652 , supply 3 black, P2, P1, roll 541.  -- you must P2 on the 4
+            supply_adapter.notifyDataSetChanged();
+            ccd_adapter.setSelectedPos(null);
+            craftcard_die.clear();
+            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+            craftcard_die.add(new GameObject(5, GameObject.GOColor.BLACK));
+            craftcard_die.add(new GameObject(2, GameObject.GOColor.BLACK));
+            ccd_adapter.notifyDataSetChanged();
+            supply_adapter.setSelectedPos(null);
+            supply_die.clear();
+            supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+            supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+            supply_die.add(new GameBonus(GameBonus.Bonus.P1));
+            testRollout = new CustomRollout(
+                    sharedPref, 
+                    diceHashListBuilder(Arrays.asList(5,4,1), new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Integer>())
+                    );
             break;
         }
-        supply_adapter.notifyDataSetChanged();
-        test = (test==2) ? 0 : test+1;
     }
+    
+    private void runTest() {
+        if (testRollout == null) {
+            pickTest();
+        }
+        doRollout(1, testRollout);
+    }
+    
+    private HashMap<GameObject.GOColor, List<GameObject>> diceHashListBuilder(
+            List<Integer> black, List<Integer> green, List<Integer> red, List<Integer> blue) {
+        HashMap<GameObject.GOColor, List<GameObject>> diceHashList = new HashMap<GameObject.GOColor, List<GameObject>>();
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            diceHashList.put(color, new ArrayList<GameObject>());
+        }
+        for (int i : black) {
+            diceHashList.get(GameObject.GOColor.BLACK).add(new GameObject(i, GameObject.GOColor.BLACK));
+        }
+        for (int i : green) {
+            diceHashList.get(GameObject.GOColor.GREEN).add(new GameObject(i, GameObject.GOColor.GREEN));
+        }
+        for (int i : red) {
+            diceHashList.get(GameObject.GOColor.RED).add(new GameObject(i, GameObject.GOColor.RED));
+        }
+        for (int i : blue) {
+            diceHashList.get(GameObject.GOColor.BLUE).add(new GameObject(i, GameObject.GOColor.BLUE));
+        }
+        return diceHashList;
+    }
+            
 }
