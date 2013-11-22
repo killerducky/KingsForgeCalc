@@ -23,9 +23,13 @@ public class GameBonusHashList extends HashMap<GameBonus.Bonus, List<GameBonus>>
         
         public MyIter() {
             iters = new ArrayList<ListIterator<GameBonus>>();
+            //iters.add(get(GameBonus.Bonus.A1TO6).listIterator());
             iters.add(get(GameBonus.Bonus.A6).listIterator());
             iters.add(get(GameBonus.Bonus.WD).listIterator());
             iters.add(get(GameBonus.Bonus.P2).listIterator());
+            iters.add(get(GameBonus.Bonus.P1X3).listIterator());
+            iters.add(get(GameBonus.Bonus.P1).listIterator());
+            //iters.add(get(GameBonus.Bonus.RR).listIterator());
             currIterIndex = 0;
         }
         

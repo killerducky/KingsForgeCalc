@@ -36,7 +36,12 @@ public class GameObject implements Comparable<GameObject> {
 	    gbList.add(gb);
 	    value = gb.applyBonus(value);
 	}
-    
+
+	public void removeBonusIfMatch(GameBonus gb) {
+	    if (gbList.size() > 0 && gbList.get(gbList.size()-1) == gb) {
+	        removeBonus(gb);
+	    }
+	}
 	public void removeBonus(GameBonus gb) {
 	    gbList.remove(gbList.size()-1);
 	    value = origValue;

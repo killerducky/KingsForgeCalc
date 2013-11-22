@@ -288,7 +288,8 @@ public class MainActivity extends Activity {
     // for a time test, require 3 black 6s, and have 4 "+1 (3)" bonuses
     // 1000 rolls
     // 16bd584526a9337112c93092ac681d3260d97640 - Time=0.54s,  Odds=59.04%
-    // Time=0.30
+    //                                            Time=0.30s
+    //                                            Time=0.88s,  Odds=57.34%
     //
     // TODO: more tests:
     // Black 4333, supply 4 black, P1X3:3, roll 1s.  Should pass 100%
