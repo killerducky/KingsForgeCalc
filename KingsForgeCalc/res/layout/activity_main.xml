@@ -6,27 +6,42 @@
     android:orientation="vertical" >
 
     <TextView
-        android:text="Craft Card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
         android:gravity="bottom|center_horizontal"
-    />
-    
-    <GridView
-        android:id="@+id/craftcard_grid"
+        android:text="Craft Card"
+        android:textSize="20sp" />
+
+    <LinearLayout
+        android:id="@+id/new_craftcard_grid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:columnWidth="50dp"
-        android:numColumns="auto_fit" >
-    </GridView>
+        android:orientation="horizontal" >
+
+        <com.olsen.andy.kingsforgecalc.DiceSpinner
+            android:id="@+id/spinner_test"
+            android:layout_width="50dp"
+            android:layout_height="50dp" />
+    </LinearLayout>
 
     <TextView
-        android:text=""
         android:layout_width="match_parent"
         android:layout_height="10dp"
         android:gravity="bottom|center_horizontal"
-    />
+        android:text="" />
+    
+    <LinearLayout
+        android:id="@+id/new_supply_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <com.olsen.andy.kingsforgecalc.DiceSpinner
+            android:id="@+id/black_supply"
+            android:layout_width="50dp"
+            android:layout_height="50dp" />
+    </LinearLayout>
+
     
     <GridView
         android:id="@+id/craftcard_tools"
@@ -36,14 +51,14 @@
         android:numColumns="auto_fit" >
     </GridView>
 
+    
     <TextView
-        android:text="Supply"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
         android:gravity="center"
-    />
-    
+        android:text="Supply"
+        android:textSize="20sp" />
+
     <GridView
         android:id="@+id/supply_grid"
         android:layout_width="match_parent"
@@ -53,12 +68,11 @@
     </GridView>
 
     <TextView
-        android:text=""
         android:layout_width="match_parent"
         android:layout_height="10dp"
         android:gravity="center"
-    />
-    
+        android:text="" />
+
     <GridView
         android:id="@+id/supply_tools"
         android:layout_width="match_parent"
@@ -66,12 +80,12 @@
         android:columnWidth="50dp"
         android:numColumns="auto_fit" >
     </GridView>
-    
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="90dp"
-        android:orientation="horizontal"
         android:gravity="center"
+        android:orientation="horizontal"
         tools:context=".MainActivity" >
 
         <Button
@@ -79,6 +93,7 @@
             android:layout_height="wrap_content"
             android:onClick="doRollout"
             android:text="@string/button_estimate" />
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -95,9 +110,9 @@
         <TextView
             android:id="@+id/rollout_results"
             android:layout_width="match_parent"
-            android:textSize="20sp"
+            android:layout_height="90dp"
             android:gravity="center"
-            android:layout_height="90dp" />
+            android:textSize="20sp" />
     </LinearLayout>
 
 </LinearLayout>

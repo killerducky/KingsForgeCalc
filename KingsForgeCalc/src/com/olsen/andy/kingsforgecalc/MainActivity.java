@@ -1,7 +1,6 @@
 package com.olsen.andy.kingsforgecalc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,6 +21,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 
@@ -29,15 +30,18 @@ public class MainActivity extends Activity {
 
 	Random random = new Random(new Date().getTime());
 	
-    private List<Object>      craftcard_die;    // list of craft card requirements
-    private List<Object>      craftcard_tools;  // list of tools to manipulate craftcard_die
-    private CraftDieAdapter   ccd_adapter;
-    private CraftToolsAdapter cct_adapter;
+//    private List<Object>      craftcard_die;    // list of craft card requirements
+//    private List<Object>      craftcard_tools;  // list of tools to manipulate craftcard_die
+//    private CraftDieAdapter   ccd_adapter;
+//    private CraftToolsAdapter cct_adapter;
     
     private List<Object>      supply_die;      // list of supply die available
     private List<Object>      supply_tools;    // list of tools to manipulate suply_die
     private CraftDieAdapter   supply_adapter;  // for now can just use the same adapter class
     private CraftToolsAdapter supplyT_adapter; //   "
+    
+    CraftDieAdapter adapter;
+    
     
     public SharedPreferences sharedPref;
 
@@ -50,37 +54,6 @@ public class MainActivity extends Activity {
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);  // TODO: Where should I put this?
 
         setContentView(R.layout.activity_main);
-
-        craftcard_die = new ArrayList<Object>();
-    	craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-    	craftcard_die.add(new GameObject(1, GameObject.GOColor.BLACK));
-    	craftcard_die.add(new GameObject(1, GameObject.GOColor.GREEN));
-    	craftcard_die.add(new GameObject(1, GameObject.GOColor.GREEN));
-        GridView ccd_gv = (GridView) findViewById(R.id.craftcard_grid);
-        ccd_adapter = new CraftDieAdapter(this, craftcard_die, null);
-        ccd_gv.setAdapter(ccd_adapter);
-        ccd_gv.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
-            	onCraftcardDieClick(pos);
-            }
-        });
-        
-        craftcard_tools = new ArrayList<Object>();
-        craftcard_tools.add(new String("+"));
-        craftcard_tools.add(new String("-"));
-        craftcard_tools.add(new String("X"));
-        craftcard_tools.add(new String("Black"));
-        craftcard_tools.add(new String("Green"));
-        craftcard_tools.add(new String("Red"));
-        craftcard_tools.add(new String("Blue"));
-        GridView cct_gv = (GridView) findViewById(R.id.craftcard_tools);
-        cct_adapter = new CraftToolsAdapter(this, craftcard_tools);
-        cct_gv.setAdapter(cct_adapter);
-        cct_gv.setOnItemClickListener(new OnItemClickListener() {
-        	public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
-        		onCraftcardToolsClick(pos);
-        	}
-        });
 
         supply_die = new ArrayList<Object>();
     	supply_die.add(new GameObject(2, GameObject.GOColor.BLACK, 0, 50));
@@ -114,50 +87,37 @@ public class MainActivity extends Activity {
         	}
         });
         
+        LinearLayout new_grid;
+        DiceSpinner spinnerOrig;
+        new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
+        spinnerOrig = (DiceSpinner) findViewById(R.id.spinner_test);
+        spinnerOrig.buildSpinner();
+        for (int i=0; i<6; i++) {
+            DiceSpinner spinnerClone = new DiceSpinner(this);
+            spinnerClone.setLayoutParams(spinnerOrig.getLayoutParams());
+            spinnerClone.buildSpinner();
+            setSpinnerDeleted(spinnerClone);
+            new_grid.addView(spinnerClone);
+        }
+
+        new_grid = (LinearLayout) findViewById(R.id.new_supply_grid);
+        spinnerOrig = (DiceSpinner) findViewById(R.id.black_supply);
+        spinnerOrig.buildSpinner();
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            if (color == GameObject.GOColor.BLACK) { continue; }
+            DiceSpinner spinnerClone = new DiceSpinner(this);
+            spinnerClone.setLayoutParams(spinnerOrig.getLayoutParams());
+            spinnerClone.buildSpinner();
+            spinnerClone.setColor(color);
+            new_grid.addView(spinnerClone);
+        }
+
+    }
+
+    private void setSpinnerDeleted(Spinner spinner) {
+        spinner.setSelection(6+4+1-1);   // FIXME super hack to set default to deleted
     }
     
-    private void onCraftcardDieClick(int pos) {
-    	if (ccd_adapter.getSelectedPos() != null && ccd_adapter.getSelectedPos() == pos) {
-    		ccd_adapter.setSelectedPos(null);  // unselect
-    	} else {
-		    ccd_adapter.setSelectedPos(pos);
-    	}
-    }
-
-    private void onCraftcardToolsClick(int pos) {
-    	String str = craftcard_tools.get(pos).toString();
-
-    	if (ccd_adapter.getSelectedPos() != null) {
-        	GameObject go = (GameObject) craftcard_die.get((int) ccd_adapter.getSelectedPos());
-    		if      ("+".equals(str)) { go.setOrigValue(go.getOrigValue() + 1); }
-    		else if ("-".equals(str)) { go.setOrigValue(go.getOrigValue() - 1); }
-    		else if ("X".equals(str)) { 
-    			craftcard_die.remove((int) ccd_adapter.getSelectedPos());  // XXX: omg Integer objects mess things up here, cast to int
-    			if (craftcard_die.size()==0) {
-    				ccd_adapter.setSelectedPos(null);
-    			} else if (ccd_adapter.getSelectedPos() >= craftcard_die.size()) { 
-    				ccd_adapter.setSelectedPos(craftcard_die.size()-1);
-    			}
-    		}
-    	}
-    	if ("Black".equals(str)) { 
-    		craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK)); 
-    		ccd_adapter.setSelectedPos(craftcard_die.size()-1);
-    	} else if ("Green".equals(str)) { 
-    		craftcard_die.add(new GameObject(4, GameObject.GOColor.GREEN)); 
-    		ccd_adapter.setSelectedPos(craftcard_die.size()-1);
-    	} else if ("Red".equals(str)) { 
-    		craftcard_die.add(new GameObject(4, GameObject.GOColor.RED)); 
-    		ccd_adapter.setSelectedPos(craftcard_die.size()-1);
-    	} else if ("Blue".equals(str)) { 
-    		craftcard_die.add(new GameObject(4, GameObject.GOColor.BLUE)); 
-    		ccd_adapter.setSelectedPos(craftcard_die.size()-1);
-    	}
-
-    	// TODO: currently inconsistent on who is responsible to call this
-    	ccd_adapter.notifyDataSetChanged();
-    }
-
     private void onSupplyDieClick(int pos) {
     	if (supply_adapter.getSelectedPos() != null && supply_adapter.getSelectedPos() == pos) {
     		supply_adapter.setSelectedPos(null);  // unselect
@@ -244,9 +204,14 @@ public class MainActivity extends Activity {
     	List<GameBonus> bonusList = new ArrayList<GameBonus>();
     	
     	// get craft requirements out of the widgets
-    	for (Object o : craftcard_die) {
-    		GameObject go = (GameObject) o;
-    		neededHashList.get(go.getColor()).add(go);
+    	LinearLayout new_grid;
+    	new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
+    	for (int i=0; i<new_grid.getChildCount(); i++) {
+    	    Spinner spinner = (Spinner) new_grid.getChildAt(i);
+    	    if (spinner.getSelectedItem() instanceof GameObject) {
+    	        GameObject go = (GameObject) spinner.getSelectedItem();
+    	        neededHashList.get(go.getColor()).add(go);
+    	    }
     	}
 
         // TODO: hacky but the GameObjects are the dice
@@ -334,12 +299,17 @@ public class MainActivity extends Activity {
     
     class TestPerformance implements SetupTest {
         public void setupTest() {
-            ccd_adapter.setSelectedPos(null);
-            craftcard_die.clear();
-            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-            ccd_adapter.notifyDataSetChanged();
+            LinearLayout new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
+            for (int i=0; i<new_grid.getChildCount(); i++) {
+                Spinner spinner = (Spinner) new_grid.getChildAt(i);
+                setSpinnerDeleted(spinner);
+            }
+            for (int i=0; i<3; i++) {
+                Spinner spinner = (Spinner) new_grid.getChildAt(i);
+                spinner.setSelection(6-1);
+                // FIXME still need to set it to black...
+            }
+
             supply_adapter.setSelectedPos(null);
             supply_die.clear();
             supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
@@ -354,123 +324,123 @@ public class MainActivity extends Activity {
         }
     }
     
-    class TestP2Pass implements SetupTest {
-        public void setupTest() {
-            ccd_adapter.setSelectedPos(null);
-            craftcard_die.clear();
-            craftcard_die.add(new GameObject(2, GameObject.GOColor.BLACK));
-            ccd_adapter.notifyDataSetChanged();
-            supply_adapter.setSelectedPos(null);
-            supply_die.clear();
-            supply_die.add(new GameObject(1, GameObject.GOColor.BLACK, 0, 50));   
-            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
-            supply_die.add(new GameBonus(GameBonus.Bonus.P1));
-            testRollout = new RollAll1s(sharedPref);
-        }
-    }
-    
-    class TestP2Fail implements SetupTest {
-        public void setupTest() {
-            ccd_adapter.setSelectedPos(null);
-            craftcard_die.clear();
-            craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
-            craftcard_die.add(new GameObject(1, GameObject.GOColor.BLACK));
-            ccd_adapter.notifyDataSetChanged();
-            supply_adapter.setSelectedPos(null);
-            supply_die.clear();
-            supply_die.add(new GameObject(2, GameObject.GOColor.BLACK, 0, 50));   
-            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
-            supply_die.add(new GameBonus(GameBonus.Bonus.P2));
-            testRollout = new RollAll1s(sharedPref);
-        }
-    }
-    
-    class TestP2P1A implements SetupTest {
-        public void setupTest() {
-            // Black 632 , supply 3 black, P2, P1, roll 521.  -- you must P2 on the 1
-            supply_adapter.notifyDataSetChanged();
-            ccd_adapter.setSelectedPos(null);
-            craftcard_die.clear();
-            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-            craftcard_die.add(new GameObject(3, GameObject.GOColor.BLACK));
-            craftcard_die.add(new GameObject(2, GameObject.GOColor.BLACK));
-            ccd_adapter.notifyDataSetChanged();
-            supply_adapter.setSelectedPos(null);
-            supply_die.clear();
-            supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
-            supply_die.add(new GameBonus(GameBonus.Bonus.P2));
-            supply_die.add(new GameBonus(GameBonus.Bonus.P1));
-            testRollout = new CustomRollout(
-                    sharedPref, 
-                    diceHashListBuilder(Arrays.asList(5,2,1), new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Integer>())
-                    );
-        }
-    }
-    
-    class TestP2P1B implements SetupTest {
-        public void setupTest() {
-            // Black 652 , supply 3 black, P2, P1, roll 541.  -- you must P2 on the 4
-            supply_adapter.notifyDataSetChanged();
-            ccd_adapter.setSelectedPos(null);
-            craftcard_die.clear();
-            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-            craftcard_die.add(new GameObject(5, GameObject.GOColor.BLACK));
-            craftcard_die.add(new GameObject(2, GameObject.GOColor.BLACK));
-            ccd_adapter.notifyDataSetChanged();
-            supply_adapter.setSelectedPos(null);
-            supply_die.clear();
-            supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
-            supply_die.add(new GameBonus(GameBonus.Bonus.P2));
-            supply_die.add(new GameBonus(GameBonus.Bonus.P1));
-            testRollout = new CustomRollout(
-                    sharedPref, 
-                    diceHashListBuilder(Arrays.asList(5,4,1), new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Integer>())
-                    );
-        }
-    }
-    
-    class TestWD implements SetupTest {
-        public void setupTest() {
-            supply_adapter.notifyDataSetChanged();
-            ccd_adapter.setSelectedPos(null);
-            craftcard_die.clear();
-            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
-            craftcard_die.add(new GameObject(6, GameObject.GOColor.GREEN));
-            ccd_adapter.notifyDataSetChanged();
-            supply_adapter.setSelectedPos(null);
-            supply_die.clear();
-            supply_die.add(new GameObject(0, GameObject.GOColor.BLACK, 0, 50));
-            supply_die.add(new GameObject(1, GameObject.GOColor.GREEN, 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
-            supply_die.add(new GameBonus(GameBonus.Bonus.WD));
-            supply_die.add(new GameBonus(GameBonus.Bonus.A6));
-            supply_die.add(new GameBonus(GameBonus.Bonus.A6));
-            testRollout = new RollAll1s(sharedPref);
-        }
-    }
+//    class TestP2Pass implements SetupTest {
+//        public void setupTest() {
+//            ccd_adapter.setSelectedPos(null);
+//            craftcard_die.clear();
+//            craftcard_die.add(new GameObject(2, GameObject.GOColor.BLACK));
+//            ccd_adapter.notifyDataSetChanged();
+//            supply_adapter.setSelectedPos(null);
+//            supply_die.clear();
+//            supply_die.add(new GameObject(1, GameObject.GOColor.BLACK, 0, 50));   
+//            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.P1));
+//            testRollout = new RollAll1s(sharedPref);
+//        }
+//    }
+//    
+//    class TestP2Fail implements SetupTest {
+//        public void setupTest() {
+//            ccd_adapter.setSelectedPos(null);
+//            craftcard_die.clear();
+//            craftcard_die.add(new GameObject(4, GameObject.GOColor.BLACK));
+//            craftcard_die.add(new GameObject(1, GameObject.GOColor.BLACK));
+//            ccd_adapter.notifyDataSetChanged();
+//            supply_adapter.setSelectedPos(null);
+//            supply_die.clear();
+//            supply_die.add(new GameObject(2, GameObject.GOColor.BLACK, 0, 50));   
+//            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+//            testRollout = new RollAll1s(sharedPref);
+//        }
+//    }
+//    
+//    class TestP2P1A implements SetupTest {
+//        public void setupTest() {
+//            // Black 632 , supply 3 black, P2, P1, roll 521.  -- you must P2 on the 1
+//            supply_adapter.notifyDataSetChanged();
+//            ccd_adapter.setSelectedPos(null);
+//            craftcard_die.clear();
+//            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+//            craftcard_die.add(new GameObject(3, GameObject.GOColor.BLACK));
+//            craftcard_die.add(new GameObject(2, GameObject.GOColor.BLACK));
+//            ccd_adapter.notifyDataSetChanged();
+//            supply_adapter.setSelectedPos(null);
+//            supply_die.clear();
+//            supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.P1));
+//            testRollout = new CustomRollout(
+//                    sharedPref, 
+//                    diceHashListBuilder(Arrays.asList(5,2,1), new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Integer>())
+//                    );
+//        }
+//    }
+//    
+//    class TestP2P1B implements SetupTest {
+//        public void setupTest() {
+//            // Black 652 , supply 3 black, P2, P1, roll 541.  -- you must P2 on the 4
+//            supply_adapter.notifyDataSetChanged();
+//            ccd_adapter.setSelectedPos(null);
+//            craftcard_die.clear();
+//            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+//            craftcard_die.add(new GameObject(5, GameObject.GOColor.BLACK));
+//            craftcard_die.add(new GameObject(2, GameObject.GOColor.BLACK));
+//            ccd_adapter.notifyDataSetChanged();
+//            supply_adapter.setSelectedPos(null);
+//            supply_die.clear();
+//            supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.P2));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.P1));
+//            testRollout = new CustomRollout(
+//                    sharedPref, 
+//                    diceHashListBuilder(Arrays.asList(5,4,1), new ArrayList<Integer>(), new ArrayList<Integer>(), new ArrayList<Integer>())
+//                    );
+//        }
+//    }
+//    
+//    class TestWD implements SetupTest {
+//        public void setupTest() {
+//            supply_adapter.notifyDataSetChanged();
+//            ccd_adapter.setSelectedPos(null);
+//            craftcard_die.clear();
+//            craftcard_die.add(new GameObject(6, GameObject.GOColor.BLACK));
+//            craftcard_die.add(new GameObject(6, GameObject.GOColor.GREEN));
+//            ccd_adapter.notifyDataSetChanged();
+//            supply_adapter.setSelectedPos(null);
+//            supply_die.clear();
+//            supply_die.add(new GameObject(0, GameObject.GOColor.BLACK, 0, 50));
+//            supply_die.add(new GameObject(1, GameObject.GOColor.GREEN, 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
+//            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.WD));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.A6));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.A6));
+//            testRollout = new RollAll1s(sharedPref);
+//        }
+//    }
     
     List<SetupTest> setupTests = new ArrayList<SetupTest>();
     Iterator<SetupTest> testIter;
     Rollout testRollout;
     private void pickTest() {
         if (testRollout == null) {
-            setupTests.add(new TestWD());
-            setupTests.add(new TestP2P1A());
-            setupTests.add(new TestP2P1B());
+//            setupTests.add(new TestWD());
+//            setupTests.add(new TestP2P1A());
+//            setupTests.add(new TestP2P1B());
             setupTests.add(new TestPerformance());
-            setupTests.add(new TestP2Pass());
-            setupTests.add(new TestP2Fail());
+//            setupTests.add(new TestP2Pass());
+//            setupTests.add(new TestP2Fail());
             testIter = setupTests.iterator();
         }
         // if at end, restart
