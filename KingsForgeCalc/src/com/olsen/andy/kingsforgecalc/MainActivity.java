@@ -56,10 +56,6 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         supply_die = new ArrayList<Object>();
-    	supply_die.add(new GameObject(2, GameObject.GOColor.BLACK, 0, 50));
-    	supply_die.add(new GameObject(3, GameObject.GOColor.GREEN, 0, 50));
-    	supply_die.add(new GameObject(3, GameObject.GOColor.RED  , 0, 50));
-    	supply_die.add(new GameObject(3, GameObject.GOColor.BLUE , 0, 50));
         GridView supply_gv = (GridView) findViewById(R.id.supply_grid);
         supply_adapter = new CraftDieAdapter(this, supply_die, null); // TODO CraftDie?
         supply_gv.setAdapter(supply_adapter);
@@ -91,23 +87,23 @@ public class MainActivity extends Activity {
         DiceSpinner spinnerOrig;
         new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
         spinnerOrig = (DiceSpinner) findViewById(R.id.spinner_test);
-        spinnerOrig.buildSpinner();
+        spinnerOrig.buildSpinner(false);
         for (int i=0; i<6; i++) {
             DiceSpinner spinnerClone = new DiceSpinner(this);
             spinnerClone.setLayoutParams(spinnerOrig.getLayoutParams());
-            spinnerClone.buildSpinner();
+            spinnerClone.buildSpinner(false);
             setSpinnerDeleted(spinnerClone);
             new_grid.addView(spinnerClone);
         }
 
         new_grid = (LinearLayout) findViewById(R.id.new_supply_grid);
         spinnerOrig = (DiceSpinner) findViewById(R.id.black_supply);
-        spinnerOrig.buildSpinner();
+        spinnerOrig.buildSpinner(true);
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             if (color == GameObject.GOColor.BLACK) { continue; }
             DiceSpinner spinnerClone = new DiceSpinner(this);
             spinnerClone.setLayoutParams(spinnerOrig.getLayoutParams());
-            spinnerClone.buildSpinner();
+            spinnerClone.buildSpinner(true);
             spinnerClone.setColor(color);
             new_grid.addView(spinnerClone);
         }
@@ -218,13 +214,21 @@ public class MainActivity extends Activity {
     	// The other string objects are bonuses
     	for (Object o : supply_die) {
     		if (o instanceof GameObject) {
-    			GameObject go = (GameObject) o;
-    			supplyHashInt.put(go.getColor(), go.getOrigValue());
+//    			GameObject go = (GameObject) o;
+//    			supplyHashInt.put(go.getColor(), go.getOrigValue());
     		} else {
     			bonusList.add((GameBonus) o);
     		}
     	}
     	
+        new_grid = (LinearLayout) findViewById(R.id.new_supply_grid);
+        for (int i=0; i < new_grid.getChildCount(); i++) {
+            Spinner spinner = (Spinner) new_grid.getChildAt(i);
+            GameObject go = (GameObject) spinner.getSelectedItem();
+            supplyHashInt.put(go.getColor(), go.getOrigValue());
+        }
+
+
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
     		Collections.sort(neededHashList.get(color));
     		Collections.reverse(neededHashList.get(color));

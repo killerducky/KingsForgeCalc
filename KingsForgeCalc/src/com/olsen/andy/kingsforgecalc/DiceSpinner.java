@@ -29,14 +29,22 @@ public class DiceSpinner extends Spinner {
         }
     }
     
-    public void buildSpinner() {
-        for (int i=1; i<=6; i++) {
-            list.add(new GameObject(i, GameObject.GOColor.BLACK));
+    public void buildSpinner(boolean isSupplyType) {
+        if (isSupplyType) {
+            for (int i=1; i<=25; i++) {
+                list.add(new GameObject(i, GameObject.GOColor.BLACK, 1, 25));
+            }
+        } else {
+            for (int i=1; i<=6; i++) {
+                list.add(new GameObject(i, GameObject.GOColor.BLACK));
+            }
+            if (!isSupplyType) {
+                for (GameObject.GOColor color : GameObject.GOColor.values()) {
+                    list.add(color);
+                }
+                list.add(new String("Delete"));
+            }
         }
-        for (GameObject.GOColor color : GameObject.GOColor.values()) {
-            list.add(color);
-        }
-        list.add(new String("Delete"));
         super.setAdapter(adapter);
         super.setOnItemSelectedListener(new OnItemSelectedListener() {
             public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
