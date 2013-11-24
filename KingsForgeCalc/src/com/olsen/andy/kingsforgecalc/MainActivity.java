@@ -107,7 +107,21 @@ public class MainActivity extends Activity {
             spinnerClone.setColor(color);
             new_grid.addView(spinnerClone);
         }
-
+        
+        spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_WD);
+        spinnerOrig.buildSpinner(true);
+        spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_A6);
+        spinnerOrig.buildSpinner(true);
+        spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_RR);
+        spinnerOrig.buildSpinner(true);
+        spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_A1TO6);
+        spinnerOrig.buildSpinner(true);
+        spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_P1);
+        spinnerOrig.buildSpinner(true);
+        spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_P1X3);
+        spinnerOrig.buildSpinner(true);
+        spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_P2);
+        spinnerOrig.buildSpinner(true);
     }
 
     private void setSpinnerDeleted(Spinner spinner) {
@@ -303,7 +317,8 @@ public class MainActivity extends Activity {
     
     class TestPerformance implements SetupTest {
         public void setupTest() {
-            LinearLayout new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
+            LinearLayout new_grid;
+            new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
             for (int i=0; i<new_grid.getChildCount(); i++) {
                 Spinner spinner = (Spinner) new_grid.getChildAt(i);
                 setSpinnerDeleted(spinner);
@@ -314,12 +329,18 @@ public class MainActivity extends Activity {
                 // FIXME still need to set it to black...
             }
 
+            new_grid = (LinearLayout) findViewById(R.id.new_supply_grid);
+            Spinner spinner;
+            spinner = (Spinner) new_grid.getChildAt(0);
+            spinner.setSelection(3);
+            spinner = (Spinner) new_grid.getChildAt(1);
+            spinner.setSelection(0);
+            spinner = (Spinner) new_grid.getChildAt(2);
+            spinner.setSelection(0);
+            spinner = (Spinner) new_grid.getChildAt(3);
+            spinner.setSelection(0);
             supply_adapter.setSelectedPos(null);
             supply_die.clear();
-            supply_die.add(new GameObject(3, GameObject.GOColor.BLACK, 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.GREEN, 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.RED  , 0, 50));
-            supply_die.add(new GameObject(0, GameObject.GOColor.BLUE , 0, 50));
             supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
             supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
             supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
