@@ -49,27 +49,11 @@
             android:layout_height="70dp" />
     </LinearLayout>
 
-    <GridView
-        android:id="@+id/supply_grid"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnWidth="50dp"
-        android:numColumns="auto_fit" >
-    </GridView>
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="10dp"
         android:gravity="center"
         android:text="" />
-
-    <GridView
-        android:id="@+id/supply_tools"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnWidth="50dp"
-        android:numColumns="auto_fit" >
-    </GridView>
 
     <TableLayout
         android:layout_width="match_parent"

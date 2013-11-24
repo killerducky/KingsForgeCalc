@@ -18,9 +18,6 @@ import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -30,16 +27,6 @@ public class MainActivity extends Activity {
 
 	Random random = new Random(new Date().getTime());
 	
-//    private List<Object>      craftcard_die;    // list of craft card requirements
-//    private List<Object>      craftcard_tools;  // list of tools to manipulate craftcard_die
-//    private CraftDieAdapter   ccd_adapter;
-//    private CraftToolsAdapter cct_adapter;
-    
-    private List<Object>      supply_die;      // list of supply die available
-    private List<Object>      supply_tools;    // list of tools to manipulate suply_die
-    private CraftDieAdapter   supply_adapter;  // for now can just use the same adapter class
-    private CraftToolsAdapter supplyT_adapter; //   "
-    
     CraftDieAdapter adapter;
     
     
@@ -55,34 +42,6 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.activity_main);
 
-        supply_die = new ArrayList<Object>();
-        GridView supply_gv = (GridView) findViewById(R.id.supply_grid);
-        supply_adapter = new CraftDieAdapter(this, supply_die, null); // TODO CraftDie?
-        supply_gv.setAdapter(supply_adapter);
-        supply_gv.setOnItemClickListener(new OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
-            	onSupplyDieClick(pos);
-            }
-        });
-        
-        supply_tools = new ArrayList<Object>();
-        supply_tools.add(new String("+"));
-        supply_tools.add(new String("-"));
-        supply_tools.add(new String("X"));
-        for (GameBonus.Bonus bonus : GameBonus.Bonus.values()) {
-            supply_tools.add(new GameBonus(bonus));
-        }
-        supply_tools.add(new String("Pick Test"));
-        supply_tools.add(new String("Run Test"));
-        GridView supplyT_gv = (GridView) findViewById(R.id.supply_tools);
-        supplyT_adapter = new CraftToolsAdapter(this, supply_tools);
-        supplyT_gv.setAdapter(supplyT_adapter);
-        supplyT_gv.setOnItemClickListener(new OnItemClickListener() {
-        	public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
-        		onSupplyToolsClick(pos);
-        	}
-        });
-        
         LinearLayout new_grid;
         DiceSpinner spinnerOrig;
         new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
@@ -128,50 +87,6 @@ public class MainActivity extends Activity {
         spinner.setSelection(6+4+1-1);   // FIXME super hack to set default to deleted
     }
     
-    private void onSupplyDieClick(int pos) {
-    	if (supply_adapter.getSelectedPos() != null && supply_adapter.getSelectedPos() == pos) {
-    		supply_adapter.setSelectedPos(null);  // unselect
-    	} else {
-    		supply_adapter.setSelectedPos(pos);
-    	}
-    }
-
-    private void onSupplyToolsClick(int pos) {
-    	Object clickedO = supply_tools.get(pos);
-    	if (supply_adapter.getSelectedPos() != null) { 
-    		Object selectedO = supply_die.get(supply_adapter.getSelectedPos());
-    		if (selectedO instanceof GameObject) {
-    			GameObject go = (GameObject) selectedO;
-    			if      ("+".equals(clickedO.toString())) { go.setOrigValue(go.getOrigValue() + 1); }
-    			else if ("-".equals(clickedO.toString())) { go.setOrigValue(go.getOrigValue() - 1); }
-    			else if ("X".equals(clickedO.toString())) { go.setOrigValue(0);                 }
-    		} else {
-                // Handle bonuses, which right now are just strings
-                if ("X".equals(clickedO.toString())) {  
-        			supply_die.remove((int) supply_adapter.getSelectedPos());  // XXX: omg Integer objects mess things up here, cast to int
-        			if (supply_die.size()==0) {
-        				supply_adapter.setSelectedPos(null); // XXX: Actually this is impossible, cannot delete the 4 colors
-        			} else if (supply_adapter.getSelectedPos() >= supply_die.size()) { 
-        				supply_adapter.setSelectedPos(supply_die.size()-1);
-        			}
-                }
-    		}
-    	}
-    	if (clickedO instanceof GameBonus) {
-    		supply_die.add(new GameBonus((GameBonus) clickedO));  // copy and add
-    		supply_adapter.setSelectedPos(null);
-    	} else {
-    		if ("Pick Test".equals(clickedO.toString())) {
-    			pickTest();
-    		} else if ("Run Test".equals(clickedO.toString())) {
-    		    runTest();
-    		}
-    	
-    	}
-    	// TODO: currently inconsistent on who is responsible to call this
-    	supply_adapter.notifyDataSetChanged();
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	// Inflate the menu; this adds items to the action bar if it is present.
@@ -224,17 +139,6 @@ public class MainActivity extends Activity {
     	    }
     	}
 
-        // TODO: hacky but the GameObjects are the dice
-    	// The other string objects are bonuses
-    	for (Object o : supply_die) {
-    		if (o instanceof GameObject) {
-//    			GameObject go = (GameObject) o;
-//    			supplyHashInt.put(go.getColor(), go.getOrigValue());
-    		} else {
-    			bonusList.add((GameBonus) o);
-    		}
-    	}
-    	
         new_grid = (LinearLayout) findViewById(R.id.new_supply_grid);
         for (int i=0; i < new_grid.getChildCount(); i++) {
             Spinner spinner = (Spinner) new_grid.getChildAt(i);
@@ -355,12 +259,13 @@ public class MainActivity extends Activity {
             spinner.setSelection(0);
             spinner = (Spinner) new_grid.getChildAt(3);
             spinner.setSelection(0);
-            supply_adapter.setSelectedPos(null);
-            supply_die.clear();
-            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+            // FIXME: Add back in new bonus method
+//            supply_adapter.setSelectedPos(null);
+//            supply_die.clear();
+//            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+//            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
             testRollout = new Rollout(sharedPref);
         }
     }
@@ -489,6 +394,7 @@ public class MainActivity extends Activity {
         testIter.next().setupTest();
     }
     
+    // FIXME add back way to select this
     private void runTest() {
         if (testRollout == null) {
             pickTest();
