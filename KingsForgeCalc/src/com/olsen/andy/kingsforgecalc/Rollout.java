@@ -60,7 +60,7 @@ public class Rollout {
             bonusListHash.get(bonus.getBonusType()).add(bonus);
         }
         
-        normalLog += "\nCraft Card:\n" + neededHashList.verboseString();
+        normalLog += "\nCraft Card:\n" + neededHashList.normalString();
 
         boolean haveEnoughDice = diceDeficit <= bonusListHash.get(GameBonus.Bonus.WD).size();
         if (haveEnoughDice) {
@@ -68,17 +68,8 @@ public class Rollout {
                 normalLogEnable = (x==0);
                 debugLogEnable = (x==0 && sharedPref.getBoolean("pref_debug_log_enable",  false)); // only log the first run
                 if (debugLogEnable) { debugLog += "\ndebug_roll_all_1s=" + debug_roll_all_1s; }
-                // reroll the white die
-                for (GameBonus bonus : bonusListHash.get(GameBonus.Bonus.WD)) {
-                    if (debug_roll_all_1s) { 
-                        bonus.setWhiteDie(1); 
-                    } else {
-                        bonus.rollWhiteDie();
-                    }
-                }
-                if (debugLogEnable) { debugLog += "\nBonuses=" + bonusListHash; }
-
                 rollAllNormalDice();
+                rollWhiteDie();
                 applyA1TO6();
                 moveExtraToRerollHashList();
                 setupRecursion();
@@ -98,8 +89,6 @@ public class Rollout {
                 } else {
                     if (normalLogEnable) {
                         normalLog += "\nFailed to Craft";
-                        normalLog += "\nBest Rolled\n" + rolledHashList.verboseString();
-                        normalLog += "\nExtra Rolled\n" + rerollHashList.verboseString();
                         normalLog += "\nBonuses\n" + bonusListHash;
                     }
                 }
@@ -125,16 +114,22 @@ public class Rollout {
         resultHash.put("normalLog", normalLog);
         return resultHash;
     }
-    
-    void rerollDice() {
-        if (debugLogEnable) { debugLog += "\nBegin reroll dice"; }
-        if (normalLogEnable) { 
-            normalLog += "\nBest Rolled\n" + rolledHashList.verboseString();
-            normalLog += "\nExtra Rolled\n" + rerollHashList.verboseString();
-            for (GameBonus bonus : bonusListHash.get(GameBonus.Bonus.WD)) {
-                normalLog += "\n" + bonus.toString();
+
+    void rollWhiteDie() {
+        for (GameBonus bonus : bonusListHash.get(GameBonus.Bonus.WD)) {
+            if (debug_roll_all_1s) { 
+                bonus.setWhiteDie(1); 
+            } else {
+                bonus.rollWhiteDie();
             }
         }
+        if (debugLogEnable) { debugLog += "\nBonuses=" + bonusListHash; }
+        if (normalLogEnable) { normalLog += "\nBonuses=" + bonusListHash; }
+    }
+
+
+    void rerollDice() {
+        if (debugLogEnable) { debugLog += "\nBegin reroll dice"; }
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             List<GameObject> rolls = rolledHashList.get(color);
             List<GameObject> needed = neededHashList.get(color);
@@ -142,28 +137,26 @@ public class Rollout {
             Collections.reverse(rolls);
             // Simple reroll algorithm:
             // find the first die that is short.  Reroll it and all smaller ones.
-            boolean rerollTheRest = false;
             for (int i=0; i < rolls.size(); i++) {
-                if (rerollTheRest || rolls.get(i).getCurrValue() < needed.get(i).getCurrValue()) {
-                    GameObject oldRoll = rolls.get(i);
-                    GameObject newRoll = new GameObject(Math.abs(random.nextInt() % 6) + 1, color);
-                    rolls.set(i, newRoll);
-                    if (normalLogEnable) {
-                        normalLog += "\nReroll Old=" + oldRoll + "New=" + newRoll;
-                    }
-                    rerollTheRest = true;
+                if (rolls.get(i).getCurrValue() < needed.get(i).getCurrValue()) {
+                    rerollHashList.get(color).addAll(rolls.subList(i,  rolls.size()));
+                    rolls.subList(i, rolls.size()).clear();
                 }
             }
-            // reroll all dice in the rerollHashList.  Just make new objects and add to the rolls list
-            for (GameObject oldRoll : rerollHashList.get(color)) {
-                GameObject newRoll = new GameObject(Math.abs(random.nextInt() % 6) + 1, color);
-                rolls.add(newRoll);
-                if (normalLogEnable) {
-                    normalLog += "\nReroll Old=" + oldRoll + "New=" + newRoll;
-                }
-                rerollTheRest = true;
-
+        }
+        if (normalLogEnable) { 
+            normalLog += "\nKeep:\n" + rolledHashList.normalString();
+            normalLog += "\nReroll old:\n" + rerollHashList.normalString();
+        }
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            // reroll all dice in the rerollHashList.
+            for (GameObject go : rerollHashList.get(color)) {
+                go.setOrigValue(Math.abs(random.nextInt() % 6) + 1);
+                rolledHashList.get(color).add(go);
             }
+        }
+        if (normalLogEnable) { 
+            normalLog += "\nReroll new:\n" + rerollHashList.normalString();
         }
         for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
             // TODO: Improve this, for now just reroll if below average
@@ -193,13 +186,16 @@ public class Rollout {
             Collections.reverse(rolls);
         }
         if (debugLogEnable) { debugLog += "\nRolled:" + rolledHashList + "\n"; }
+        if (normalLogEnable) {
+            normalLog += "\nRolled:\n" + rolledHashList.normalString();
+        }
         rerollHashList = new DiceHashList();
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             rerollHashList.put(color, new ArrayList<GameObject>());
         }
         if (debugLogEnable) { 
-            debugLog += "\nExtra:" + rerollHashList + "\n";
-            debugLog += "\nRolled:" + rolledHashList + "\n";
+            debugLog += "\nExtra:\n" + rerollHashList + "\n";
+            debugLog += "\nRolled:\n" + rolledHashList + "\n";
         }
     }
 
@@ -262,12 +258,11 @@ public class Rollout {
         if (iterator.hasNext()) {
             GameBonus gb = iterator.next();
             if (debugLogEnable) { debugLog += "\nnext=" + gb; }
-            if (gb.getBonusType() == GameBonus.Bonus.RR) {
-                // RR is handled outside this, just continue down the recursion
+            if (gb.getBonusType() == GameBonus.Bonus.RR || gb.getBonusType() == GameBonus.Bonus.A1TO6) {
+                // These are handled outside, just continue down the recursion
                 recursion();
                 iterator.previous();
-            }
-            if (gb.getBonusType() == GameBonus.Bonus.WD) {
+            } else if (gb.getBonusType() == GameBonus.Bonus.WD) {
                 doBonusWD(gb);
                 iterator.previous();
             } else if (gb.getBonusType() == GameBonus.Bonus.P2 || gb.getBonusType() == GameBonus.Bonus.A6 ) {
@@ -315,7 +310,8 @@ public class Rollout {
                 iterator.previous();
 
             } else {
-                if (debugLogEnable) { debugLog += "\nNot handling yet"; }
+                if (debugLogEnable) { debugLog += "\nERROR! Not handling yet: " + gb; }
+                if (normalLogEnable) { debugLog += "\nERROR! Not handling yet: " + gb; }
                 recursion();
                 iterator.previous();
             }
@@ -363,10 +359,12 @@ public class Rollout {
                 if (rolls.get(needed.size()-1).getCurrValue() < gb.applyBonus(null)) {
                     debugLog += "\nUse: " + gb.toString() + " on:" + color;
                     unused = false;
+                    List<GameObject> saveRolls = new ArrayList<GameObject>(rolls);
                     rolls.get(needed.size()-1).applyBonus(gb);
                     Collections.sort(rolls);
                     Collections.reverse(rolls);
                     recursion();
+                    rolls = saveRolls;  // restore original order
                     rolls.get(needed.size()-1).removeBonus(gb);
                 }
             }
