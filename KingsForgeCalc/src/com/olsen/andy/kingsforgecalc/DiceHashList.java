@@ -24,4 +24,14 @@ public class DiceHashList extends HashMap<GameObject.GOColor, List<GameObject>> 
         }
         return str;
     }
+    
+    public String verboseString() {
+        String str = "";
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            for (GameObject go : this.get(color)) {
+                str += go.verboseToString() + "\n";
+            }
+        }
+        return str;
+    }
 }

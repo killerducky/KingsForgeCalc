@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
         new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
         spinnerOrig = (DiceSpinner) findViewById(R.id.spinner_test);
         spinnerOrig.buildSpinner(false, 1, 6);
+        spinnerOrig.setSelection(6-1); // default since black 6 is needed
         for (int i=0; i<6; i++) {
             DiceSpinner spinnerClone = new DiceSpinner(this);
             spinnerClone.setLayoutParams(spinnerOrig.getLayoutParams());
@@ -58,6 +59,7 @@ public class MainActivity extends Activity {
         new_grid = (LinearLayout) findViewById(R.id.new_supply_grid);
         spinnerOrig = (DiceSpinner) findViewById(R.id.black_supply);
         spinnerOrig.buildSpinner(true, 0, 25);
+        spinnerOrig.setSelection(5); // default black to 5
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             if (color == GameObject.GOColor.BLACK) { continue; }
             DiceSpinner spinnerClone = new DiceSpinner(this);
@@ -74,7 +76,7 @@ public class MainActivity extends Activity {
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_RR);
         spinnerOrig.buildSpinner(true, 0, 1);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_A1TO6);
-        spinnerOrig.buildSpinner(true, 0, 5);
+        spinnerOrig.buildSpinner(true, 0, 1);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_P1);
         spinnerOrig.buildSpinner(true, 0, 5);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_P1X3);
@@ -175,11 +177,24 @@ public class MainActivity extends Activity {
 
     	if (sharedPref.getBoolean("pref_debug_log_enable",  false)) {
     		AlertDialog.Builder resultbox = new AlertDialog.Builder(this);
-    		resultbox.setMessage("Final Results:\n" + result.get("result") + "\n\nDebug Info:\n" + result.get("log"));
+    		resultbox.setMessage(
+    		        "Final Results:\n" + result.get("result") + 
+    		        "\n\nNormal Log:\n" + result.get("normalLog") + 
+    		        "\n\nDebug Info:\n" + result.get("debugLog")
+    		        );
     		resultbox.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
     			public void onClick(DialogInterface arg0, int arg1) {}
     		});
         	resultbox.show();
+    	} else {
+            AlertDialog.Builder resultbox = new AlertDialog.Builder(this);
+            resultbox.setMessage(
+                    "Final Results:\n" + result.get("result") + 
+                    "\n\n" + result.get("normalLog"));
+            resultbox.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface arg0, int arg1) {}
+            });
+            resultbox.show();
     	}
 
     }

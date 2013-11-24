@@ -32,6 +32,17 @@ public class GameObject implements Comparable<GameObject> {
     	setColor(color);
     }
 	
+	public String verboseToString() {
+	    String str = "";
+	    str += "" + color + ":" + origValue;
+	    Integer tmpValue = origValue;
+	    for (GameBonus gb : gbList) {
+	        tmpValue = gb.applyBonus(tmpValue);
+	        str += " " + gb.getBonusType() + "=" + tmpValue;
+	    }
+	    return str;
+	}
+	
 	public void applyBonus(GameBonus gb) {
 	    gbList.add(gb);
 	    value = gb.applyBonus(value);
