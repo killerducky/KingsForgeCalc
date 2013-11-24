@@ -70,7 +70,11 @@ public class Rollout {
                 if (debugLogEnable) { debugLog += "\ndebug_roll_all_1s=" + debug_roll_all_1s; }
                 // reroll the white die
                 for (GameBonus bonus : bonusListHash.get(GameBonus.Bonus.WD)) {
-                    bonus.rollWhiteDie();
+                    if (debug_roll_all_1s) { 
+                        bonus.setWhiteDie(1); 
+                    } else {
+                        bonus.rollWhiteDie();
+                    }
                 }
                 if (debugLogEnable) { debugLog += "\nBonuses=" + bonusListHash; }
 
@@ -124,6 +128,13 @@ public class Rollout {
     
     void rerollDice() {
         if (debugLogEnable) { debugLog += "\nBegin reroll dice"; }
+        if (normalLogEnable) { 
+            normalLog += "\nBest Rolled\n" + rolledHashList.verboseString();
+            normalLog += "\nExtra Rolled\n" + rerollHashList.verboseString();
+            for (GameBonus bonus : bonusListHash.get(GameBonus.Bonus.WD)) {
+                normalLog += "\n" + bonus.toString();
+            }
+        }
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             List<GameObject> rolls = rolledHashList.get(color);
             List<GameObject> needed = neededHashList.get(color);
@@ -134,20 +145,35 @@ public class Rollout {
             boolean rerollTheRest = false;
             for (int i=0; i < rolls.size(); i++) {
                 if (rerollTheRest || rolls.get(i).getCurrValue() < needed.get(i).getCurrValue()) {
-                    rolls.set(i, new GameObject(Math.abs(random.nextInt() % 6) + 1, color));
+                    GameObject oldRoll = rolls.get(i);
+                    GameObject newRoll = new GameObject(Math.abs(random.nextInt() % 6) + 1, color);
+                    rolls.set(i, newRoll);
+                    if (normalLogEnable) {
+                        normalLog += "\nReroll Old=" + oldRoll + "New=" + newRoll;
+                    }
                     rerollTheRest = true;
                 }
             }
             // reroll all dice in the rerollHashList.  Just make new objects and add to the rolls list
-            for (@SuppressWarnings("unused") GameObject x : rerollHashList.get(color)) {
-                rolls.add(new GameObject(Math.abs(random.nextInt() % 6) + 1, color));
+            for (GameObject oldRoll : rerollHashList.get(color)) {
+                GameObject newRoll = new GameObject(Math.abs(random.nextInt() % 6) + 1, color);
+                rolls.add(newRoll);
+                if (normalLogEnable) {
+                    normalLog += "\nReroll Old=" + oldRoll + "New=" + newRoll;
+                }
+                rerollTheRest = true;
+
             }
         }
         for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
             // TODO: Improve this, for now just reroll if below average
             if (gb.getWhiteDieValue() < 4) {
+                if (normalLogEnable) {
+                    normalLog += "\nReroll Old=" + gb;
+                }
                 gb.rollWhiteDie();
                 if (debugLogEnable) { debugLog += "\nReroll white: " + gb; }
+                if (normalLogEnable) { normalLog += " New=" + gb; }
             } else {
                 if (debugLogEnable) { debugLog += "\nKeep white: " + gb; }
             }
@@ -191,7 +217,6 @@ public class Rollout {
         }
     }
 
-    
     void applyA1TO6() {
         if (bonusListHash.get(GameBonus.Bonus.A1TO6).size() > 0) {
             for (GameObject.GOColor color : GameObject.GOColor.values()) {
@@ -203,6 +228,12 @@ public class Rollout {
                 }               
                 Collections.sort(rolls);
                 Collections.reverse(rolls);
+            }
+            for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
+                if (gb.getWhiteDieValue() == 1) {
+                    gb.setWhiteDie(6);
+                    if (debugLogEnable) { debugLog += "\nUse: 1->6 on WD"; }  // TODO: Log nicely in normalLog
+                }
             }
         }
         if (debugLogEnable) { debugLog += "\nAfter 1->6:" + rolledHashList + "\n"; }
@@ -311,6 +342,7 @@ public class Rollout {
     }
 
     private void doBonusWD(GameBonus gb) {
+        boolean unused = true;
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             List<GameObject> rolls = rolledHashList.get(color);
             List<GameObject> needed = neededHashList.get(color);
@@ -319,16 +351,18 @@ public class Rollout {
             }
             if (needed.size() > rolls.size()) {
                 // if we didn't have enough of this color, add the white die here
-                debugLog += "\nUse: " + gb.toString() + "on:" + color;
-                GameObject go = new GameObject(1, color);
+                debugLog += "\nUse: " + gb.toString() + " on:" + color;
+                unused = false;
+                GameObject go = new GameObject(0, color, 0, 6);
                 go.applyBonus(gb); 
                 rolls.add(go);
                 recursion();
-                go.removeBonus(gb);
+                rolls.remove(rolls.size()-1);
                 break; // It's required to use the white die here, so just quit now
             } else {
                 if (rolls.get(needed.size()-1).getCurrValue() < gb.applyBonus(null)) {
-                    debugLog += "\nUse: " + gb.toString() + "on:" + color;
+                    debugLog += "\nUse: " + gb.toString() + " on:" + color;
+                    unused = false;
                     rolls.get(needed.size()-1).applyBonus(gb);
                     Collections.sort(rolls);
                     Collections.reverse(rolls);
@@ -336,6 +370,10 @@ public class Rollout {
                     rolls.get(needed.size()-1).removeBonus(gb);
                 }
             }
+        }
+        if (unused) {
+            debugLog += "\nUnused: " + gb.toString();
+            recursion();
         }
     }
 

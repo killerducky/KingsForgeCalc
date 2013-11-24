@@ -7,7 +7,7 @@ import java.util.Random;
 public class GameBonus {
     private Bonus name;
     private Integer white_die_value;
-	Random random = new Random(new Date().getTime());  // TODO should this be like some super global thing?
+	private static Random random = new Random(new Date().getTime());  // TODO should this be like some super global thing?
 	
 	public enum Bonus { 
 		A1TO6,
@@ -60,6 +60,10 @@ public class GameBonus {
     
     public void rollWhiteDie() {
         white_die_value = Math.abs(random.nextInt() % 6) + 1;
+    }
+
+    public void setWhiteDie(Integer value) {
+        white_die_value = value;
     }
     
     public Integer getWhiteDieValue() {
