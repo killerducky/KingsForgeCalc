@@ -242,6 +242,22 @@ public class MainActivity extends Activity {
             supplyHashInt.put(go.getColor(), go.getOrigValue());
         }
 
+        for (GameBonus.Bonus bonusType : GameBonus.Bonus.values()) {
+            Spinner spinner = null;
+            switch (bonusType) {
+            case WD : spinner = (Spinner) findViewById(R.id.bonus_WD); break;
+            case A1TO6 : spinner = (Spinner) findViewById(R.id.bonus_A1TO6); break;
+            case P1X3 : spinner = (Spinner) findViewById(R.id.bonus_P1X3); break;
+            case P1 : spinner = (Spinner) findViewById(R.id.bonus_P1); break;
+            case P2 : spinner = (Spinner) findViewById(R.id.bonus_P2); break;
+            case A6 : spinner = (Spinner) findViewById(R.id.bonus_A6); break;
+            case RR : spinner = (Spinner) findViewById(R.id.bonus_RR); break;
+            }
+            GameObject go = (GameObject) spinner.getSelectedItem();
+            for (int i=0; i < go.getCurrValue(); i++) {
+                bonusList.add(new GameBonus(bonusType));
+            }
+        }
 
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
     		Collections.sort(neededHashList.get(color));

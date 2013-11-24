@@ -31,7 +31,7 @@ public class DiceSpinner extends Spinner {
     
     public void buildSpinner(boolean isSupplyType) {
         if (isSupplyType) {
-            for (int i=1; i<=25; i++) {
+            for (int i=0; i<=25; i++) {
                 list.add(new GameObject(i, GameObject.GOColor.BLACK, 0, 25));
             }
         } else {
