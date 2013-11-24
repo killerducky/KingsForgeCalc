@@ -46,41 +46,41 @@ public class MainActivity extends Activity {
         DiceSpinner spinnerOrig;
         new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
         spinnerOrig = (DiceSpinner) findViewById(R.id.spinner_test);
-        spinnerOrig.buildSpinner(false);
+        spinnerOrig.buildSpinner(false, 1, 6);
         for (int i=0; i<6; i++) {
             DiceSpinner spinnerClone = new DiceSpinner(this);
             spinnerClone.setLayoutParams(spinnerOrig.getLayoutParams());
-            spinnerClone.buildSpinner(false);
+            spinnerClone.buildSpinner(false, 1, 6);
             setSpinnerDeleted(spinnerClone);
             new_grid.addView(spinnerClone);
         }
 
         new_grid = (LinearLayout) findViewById(R.id.new_supply_grid);
         spinnerOrig = (DiceSpinner) findViewById(R.id.black_supply);
-        spinnerOrig.buildSpinner(true);
+        spinnerOrig.buildSpinner(true, 0, 25);
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             if (color == GameObject.GOColor.BLACK) { continue; }
             DiceSpinner spinnerClone = new DiceSpinner(this);
             spinnerClone.setLayoutParams(spinnerOrig.getLayoutParams());
-            spinnerClone.buildSpinner(true);
+            spinnerClone.buildSpinner(true, 0, 25);
             spinnerClone.setColor(color);
             new_grid.addView(spinnerClone);
         }
         
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_WD);
-        spinnerOrig.buildSpinner(true);
+        spinnerOrig.buildSpinner(true, 0, 5);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_A6);
-        spinnerOrig.buildSpinner(true);
+        spinnerOrig.buildSpinner(true, 0, 1);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_RR);
-        spinnerOrig.buildSpinner(true);
+        spinnerOrig.buildSpinner(true, 0, 1);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_A1TO6);
-        spinnerOrig.buildSpinner(true);
+        spinnerOrig.buildSpinner(true, 0, 5);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_P1);
-        spinnerOrig.buildSpinner(true);
+        spinnerOrig.buildSpinner(true, 0, 5);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_P1X3);
-        spinnerOrig.buildSpinner(true);
+        spinnerOrig.buildSpinner(true, 0, 5);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_P2);
-        spinnerOrig.buildSpinner(true);
+        spinnerOrig.buildSpinner(true, 0, 5);
     }
 
     private void setSpinnerDeleted(Spinner spinner) {

@@ -29,13 +29,13 @@ public class DiceSpinner extends Spinner {
         }
     }
     
-    public void buildSpinner(boolean isSupplyType) {
+    public void buildSpinner(boolean isSupplyType, int min, int max) {
         if (isSupplyType) {
-            for (int i=0; i<=25; i++) {
-                list.add(new GameObject(i, GameObject.GOColor.BLACK, 0, 25));
+            for (int i=min; i<=max; i++) {
+                list.add(new GameObject(i, GameObject.GOColor.BLACK, min, max));
             }
         } else {
-            for (int i=1; i<=6; i++) {
+            for (int i=min; i<=max; i++) {
                 list.add(new GameObject(i, GameObject.GOColor.BLACK));
             }
             if (!isSupplyType) {
