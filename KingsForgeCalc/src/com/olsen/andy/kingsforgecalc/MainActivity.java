@@ -21,27 +21,20 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
-
 	Random random = new Random(new Date().getTime());
-	
-    CraftDieAdapter adapter;
-    
-    
     public SharedPreferences sharedPref;
-
     private static final int NUM_ROLLS = 1000;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);  // TODO: Where should I put this?
-
         setContentView(R.layout.activity_main);
-
+        
         LinearLayout new_grid;
         DiceSpinner spinnerOrig;
         new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
@@ -70,7 +63,7 @@ public class MainActivity extends Activity {
         }
         
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_WD);
-        spinnerOrig.buildSpinner(true, 0, 5);
+        spinnerOrig.buildSpinner(true, 0, 2);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_A6);
         spinnerOrig.buildSpinner(true, 0, 1);
         spinnerOrig = (DiceSpinner) findViewById(R.id.bonus_RR);
@@ -104,6 +97,10 @@ public class MainActivity extends Activity {
     		return true;
     	}
     	return true;
+    }
+    
+    public void doPickCraftCard(View view) {
+        //Toast.makeText(getApplicationContext(), "test", Toast.LENGTH_LONG).show();
     }
     
     public void doRollout1(View view) {
@@ -199,11 +196,12 @@ public class MainActivity extends Activity {
 
     }
 
-    // for a time test, require 3 black 6s, and have 4 "+1 (3)" bonuses
+    // for a time test, require 3 black 6s, and have 4 "+1 (3)" bonuses = (5/6)^3 = 57.87
     // 1000 rolls
-    // 16bd584526a9337112c93092ac681d3260d97640 - Time=0.54s,  Odds=59.04%
-    //                                            Time=0.30s
-    //                                            Time=0.88s,  Odds=57.34%
+    //             Time=0.54s,  Odds=59.04%  16bd584526a9337112c93092ac681d3260d97640
+    //             Time=0.30s
+    //             Time=0.88s,  Odds=57.34%
+    // 2013/11/24  Time=0.92s,  Odds=56.88%  2d4055049fd91cec25a0f9185e6aa61c70bdd44f  
     //
     // TODO: more tests:
     // Black 4333, supply 4 black, P1X3:3, roll 1s.  Should pass 100%

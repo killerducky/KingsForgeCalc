@@ -23,9 +23,11 @@ public class DiceSpinner extends Spinner {
     }
     
     public void setColor(GameObject.GOColor color) {
-        for (int i=0; i<6; i++) {
-            GameObject go = (GameObject) list.get(i);
-            go.setColor(color);
+        for (Object o : list) {
+            if (o instanceof GameObject) {
+                GameObject go = (GameObject) o;
+                go.setColor(color);
+            }
         }
     }
     

@@ -2,7 +2,6 @@ package com.olsen.andy.kingsforgecalc;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -13,7 +12,7 @@ import android.content.SharedPreferences;
 public class Rollout {
     private SharedPreferences sharedPref;
 
-    private Random random = new Random(new Date().getTime());
+    private Random random = new Random();
     private String debugLog;
     private String normalLog;
     private boolean debugLogEnable = false;
@@ -311,7 +310,7 @@ public class Rollout {
 
             } else {
                 if (debugLogEnable) { debugLog += "\nERROR! Not handling yet: " + gb; }
-                if (normalLogEnable) { debugLog += "\nERROR! Not handling yet: " + gb; }
+                if (normalLogEnable) { normalLog += "\nERROR! Not handling yet: " + gb; }
                 recursion();
                 iterator.previous();
             }
@@ -347,7 +346,7 @@ public class Rollout {
             }
             if (needed.size() > rolls.size()) {
                 // if we didn't have enough of this color, add the white die here
-                debugLog += "\nUse: " + gb.toString() + " on:" + color;
+                if (debugLogEnable) { debugLog += "\nUse: " + gb.toString() + " on:" + color; }
                 unused = false;
                 GameObject go = new GameObject(0, color, 0, 6);
                 go.applyBonus(gb); 
@@ -357,7 +356,7 @@ public class Rollout {
                 break; // It's required to use the white die here, so just quit now
             } else {
                 if (rolls.get(needed.size()-1).getCurrValue() < gb.applyBonus(null)) {
-                    debugLog += "\nUse: " + gb.toString() + " on:" + color;
+                    if (debugLogEnable) { debugLog += "\nUse: " + gb.toString() + " on:" + color; }
                     unused = false;
                     List<GameObject> saveRolls = new ArrayList<GameObject>(rolls);
                     rolls.get(needed.size()-1).applyBonus(gb);
@@ -370,7 +369,7 @@ public class Rollout {
             }
         }
         if (unused) {
-            debugLog += "\nUnused: " + gb.toString();
+            if (debugLogEnable) { debugLog += "\nUnused: " + gb.toString(); }
             recursion();
         }
     }

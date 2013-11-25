@@ -1,13 +1,12 @@
 package com.olsen.andy.kingsforgecalc;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
 public class GameBonus {
     private Bonus name;
     private Integer white_die_value;
-	private static Random random = new Random(new Date().getTime());  // TODO should this be like some super global thing?
+	private static Random random = new Random();  // TODO should this be like some super global thing?
 	
 	public enum Bonus { 
 		A1TO6,

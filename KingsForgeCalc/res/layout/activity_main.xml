@@ -6,9 +6,12 @@
     android:orientation="vertical" >
 
     <TextView
+        android:id="@+id/craft_card_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="bottom|center_horizontal"
+        android:clickable="true"
+        android:onClick="doPickCraftCard"
         android:text="Craft Card"
         android:textSize="20sp" />
 
