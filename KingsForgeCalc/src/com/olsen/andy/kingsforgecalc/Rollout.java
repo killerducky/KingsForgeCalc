@@ -82,7 +82,6 @@ public class Rollout {
                     recursion();
                     if (debugLogEnable) { debugLog += "\ndbgCount=" + dbgCount; }
                 }
-                // TODO: reroll
                 if (recursionSuccess) { 
                     successes++;
                 } else {
@@ -93,16 +92,14 @@ public class Rollout {
                 }
             }
         }
-        if (result == "") { 
-            if (!haveEnoughDice) {
-                result = "Insufficient dice";
-            } else {
-                result = String.format("Wins: %2.2f%% (%d/%d)", 
-                        (1.0 * successes / totalRolls) * 100,
-                        successes,
-                        totalRolls
-                        );
-            }
+        if (!haveEnoughDice) {
+            result = "Insufficient dice";
+        } else {
+            result = String.format("Wins: %2.2f%% (%d/%d)", 
+                    (1.0 * successes / totalRolls) * 100,
+                    successes,
+                    totalRolls
+                    );
         }
         double timeUsed = (System.currentTimeMillis() - startTime) / 1000.0;
         normalLog = String.format("Time to calculate: %.2fs\n", timeUsed) + normalLog;
@@ -132,8 +129,7 @@ public class Rollout {
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             List<GameObject> rolls = rolledHashList.get(color);
             List<GameObject> needed = neededHashList.get(color);
-            Collections.sort(rolls);
-            Collections.reverse(rolls);
+            Collections.sort(rolls, Collections.reverseOrder());
             // Simple reroll algorithm:
             // find the first die that is short.  Reroll it and all smaller ones.
             for (int i=0; i < rolls.size(); i++) {
@@ -171,7 +167,6 @@ public class Rollout {
             }
         }
         if (debugLogEnable) { 
-            //log += "\nExtra:" + rerollHashList + "\n";
             debugLog += "\nRolled:" + rolledHashList + "\n";
         }
 
@@ -181,8 +176,7 @@ public class Rollout {
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             List<GameObject> rolls = roll(color, supplyHashInt.get(color));
             rolledHashList.put(color, rolls);
-            Collections.sort(rolls);
-            Collections.reverse(rolls);
+            Collections.sort(rolls, Collections.reverseOrder());
         }
         if (debugLogEnable) { debugLog += "\nRolled:" + rolledHashList + "\n"; }
         if (normalLogEnable) {
@@ -221,8 +215,7 @@ public class Rollout {
                         go.applyBonus(bonusListHash.get(GameBonus.Bonus.A1TO6).get(0));  // use the first one.  more than one is redundant 
                     }
                 }               
-                Collections.sort(rolls);
-                Collections.reverse(rolls);
+                Collections.sort(rolls, Collections.reverseOrder());
             }
             for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
                 if (gb.getWhiteDieValue() == 1) {
@@ -319,8 +312,7 @@ public class Rollout {
             for (GameObject.GOColor color : GameObject.GOColor.values()) {
                 List<GameObject> tmpRolled = new ArrayList<GameObject>(rolledHashList.get(color));
                 List<GameObject> needed = neededHashList.get(color);
-                Collections.sort(tmpRolled);
-                Collections.reverse(tmpRolled);
+                Collections.sort(tmpRolled, Collections.reverseOrder());
                 boolean tmp = checkSuccess2(tmpRolled, needed);
                 if (debugLogEnable) { debugLog += "\ncolor=" + color + "\ntmp=" + tmp; }
                 if (!checkSuccess2(tmpRolled, needed)) {
@@ -348,11 +340,13 @@ public class Rollout {
                 // if we didn't have enough of this color, add the white die here
                 if (debugLogEnable) { debugLog += "\nUse: " + gb.toString() + " on:" + color; }
                 unused = false;
+                List<GameObject> saveRolls = new ArrayList<GameObject>(rolls);
                 GameObject go = new GameObject(0, color, 0, 6);
                 go.applyBonus(gb); 
                 rolls.add(go);
+                Collections.sort(rolls, Collections.reverseOrder());
                 recursion();
-                rolls.remove(rolls.size()-1);
+                rolls = saveRolls;  // remove white die and restore original order
                 break; // It's required to use the white die here, so just quit now
             } else {
                 if (rolls.get(needed.size()-1).getCurrValue() < gb.applyBonus(null)) {
@@ -360,8 +354,7 @@ public class Rollout {
                     unused = false;
                     List<GameObject> saveRolls = new ArrayList<GameObject>(rolls);
                     rolls.get(needed.size()-1).applyBonus(gb);
-                    Collections.sort(rolls);
-                    Collections.reverse(rolls);
+                    Collections.sort(rolls, Collections.reverseOrder());
                     recursion();
                     rolls = saveRolls;  // restore original order
                     rolls.get(needed.size()-1).removeBonus(gb);
@@ -409,8 +402,7 @@ public class Rollout {
                 continue;
             }
             List<GameObject> rolls = applyBestBonusSortedCopy.get(color);
-            Collections.sort(rolls);
-            Collections.reverse(rolls);
+            Collections.sort(rolls, Collections.reverseOrder());
             for (int i=0; i < needed.size(); i++) {
                 int currValue = rolls.get(i).getCurrValue();
                 int deficit = Math.max(needed.get(i).getCurrValue() - currValue, 0);
@@ -452,31 +444,16 @@ public class Rollout {
             // can only resort after applying, otherwise the indexes are invalid.
             for (GameObject.GOColor color : GameObject.GOColor.values()) { 
                 List<GameObject> rolls = applyBestBonusSortedCopy.get(color);
-                Collections.sort(rolls);
-                Collections.reverse(rolls);
+                Collections.sort(rolls, Collections.reverseOrder());
             }
         } else {
             if (largestDeficit != Integer.MIN_VALUE) {
                 List<GameObject> rolls = applyBestBonusSortedCopy.get(saveColor);
                 rolls.get(saveIndex).applyBonus(gb);
-                Collections.sort(rolls);
-                Collections.reverse(rolls);
+                Collections.sort(rolls, Collections.reverseOrder());
             }
         }
     }
-
-//    private boolean checkSuccess() {
-//        for (GameObject.GOColor color : GameObject.GOColor.values()) {
-//            List<GameObject> rolled = rolledHashList.get(color);
-//            List<GameObject> needed = neededHashList.get(color);
-//            for (int i=0; i < needed.size(); i++) {
-//                if (rolled.get(i).getCurrValue() < needed.get(i).getCurrValue()) {
-//                    return false;
-//                }
-//            }
-//        }
-//        return true;
-//    }
 
     private boolean checkSuccess2(List<GameObject> rolled, List<GameObject> needed) {
         if (rolled.size() < needed.size()) {
