@@ -10,48 +10,48 @@ public class DiceHashList extends HashMap<GameObject.GOColor, List<GameObject>> 
     }
     @Override
     public String toString() {
-        String str = "";
+        StringBuilder str = new StringBuilder();
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             switch (color) {
-            case BLACK: str += "B"; break;
-            case GREEN: str += "_G"; break;
-            case RED  : str += "_R"; break;    
-            case BLUE : str += "_b"; break;
+            case BLACK: str.append('B'); break;
+            case GREEN: str.append("_G"); break;
+            case RED  : str.append("_R"); break;    
+            case BLUE : str.append("_b"); break;
             }
             for (GameObject go : this.get(color)) {
-                str += go;
+                str.append(go);
             }
         }
-        return str;
+        return str.toString();
     }
     
     public String normalString() {
-        String str = "";
+        StringBuilder str = new StringBuilder();
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             if (this.get(color).size() == 0) {
                 continue;
             }
             switch (color) {
-            case BLACK: str += "Black "; break;
-            case GREEN: str += "Green "; break;
-            case RED  : str += "Red "; break;    
-            case BLUE : str += "Blue "; break;
+            case BLACK: str.append("Black "); break;
+            case GREEN: str.append("Green "); break;
+            case RED  : str.append("Red "); break;    
+            case BLUE : str.append("Blue "); break;
             }
             for (GameObject go : this.get(color)) {
-                str += go;
+                str.append(go);
             }
-            if (color != GameObject.GOColor.BLUE) { str += "\n"; }
+            if (color != GameObject.GOColor.BLUE) { str.append('\n'); }
         }
-        return str;
+        return str.toString();
     }
     
     public String verboseString() {
-        String str = "";
+        StringBuilder str = new StringBuilder();
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             for (GameObject go : this.get(color)) {
-                str += go.verboseToString() + "\n";
+                str.append(go.verboseToString() + '\n');
             }
         }
-        return str;
+        return str.toString();
     }
 }

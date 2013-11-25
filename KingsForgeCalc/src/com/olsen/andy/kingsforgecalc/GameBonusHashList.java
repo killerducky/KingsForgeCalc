@@ -20,11 +20,11 @@ public class GameBonusHashList extends HashMap<GameBonus.Bonus, List<GameBonus>>
     
     @Override
     public String toString() {
-        String str = "";
+        StringBuilder str = new StringBuilder();
         for (GameBonus gb : this) {
-            str += " " + gb;
+            str.append(" " + gb);
         }
-        return str;
+        return str.toString();
     }
 
     class MyIter implements ListIterator<GameBonus> {
