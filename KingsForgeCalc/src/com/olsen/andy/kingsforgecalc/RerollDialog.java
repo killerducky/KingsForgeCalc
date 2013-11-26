@@ -19,6 +19,7 @@ import android.widget.TextView;
 public class RerollDialog extends Activity {
     private GameState gameState;
     private List<CheckBox> cbList;
+    private List<DiceSpinner> diceSpinnerList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -26,6 +27,7 @@ public class RerollDialog extends Activity {
 
         gameState = GameState.getInstance();
         cbList = new ArrayList<CheckBox>();
+        diceSpinnerList = new ArrayList<DiceSpinner>();
         ScrollView scroll = new ScrollView(this);
 
         LinearLayout layout = new LinearLayout(this);
@@ -68,33 +70,19 @@ public class RerollDialog extends Activity {
     }
 
     public void updateRerollHashList() {
-        DiceHashList newRolledHashList = new DiceHashList();
-        DiceHashList newRerollHashList = new DiceHashList();
+        gameState.rollout.rolledHashList.clear();
+        gameState.rollout.rerollHashList.clear();
         Iterator<CheckBox> cbiter = cbList.iterator();
         CheckBox cb;
-        // NOTE: This relies on the order not changing
-        for (GameObject.GOColor color : GameObject.GOColor.values()) {
-            newRolledHashList.put(color, new ArrayList<GameObject>());
-            newRerollHashList.put(color, new ArrayList<GameObject>());
-            for (GameObject go : gameState.rollout.rolledHashList.get(color)) {
-                cb = cbiter.next();
-                if (cb.isChecked()) {
-                    newRolledHashList.get(color).add(go);
-                } else {
-                    newRerollHashList.get(color).add(go);
-                }
-            }
-            for (GameObject go : gameState.rollout.rerollHashList.get(color)) {
-                cb = cbiter.next();
-                if (cb.isChecked()) {
-                    newRolledHashList.get(color).add(go);
-                } else {
-                    newRerollHashList.get(color).add(go);
-                }
+        for (DiceSpinner diceSpinner : diceSpinnerList) {
+            cb = cbiter.next();
+            GameObject go = diceSpinner.getSelectedGameObject();
+            if (cb.isChecked()) {
+                gameState.rollout.rolledHashList.get(go.getColor()).add(go);
+            } else {
+                gameState.rollout.rerollHashList.get(go.getColor()).add(go);
             }
         }
-        gameState.rollout.rolledHashList = newRolledHashList;
-        gameState.rollout.rerollHashList = newRerollHashList;
     }
     
     public void addRow(ViewGroup layout, GameObject go, boolean keep) {
@@ -109,6 +97,7 @@ public class RerollDialog extends Activity {
         cb = new CheckBox(this.getApplicationContext());
         cb.setChecked(keep);
         cbList.add(cb);
+        diceSpinnerList.add(spinnerClone);
         row.addView(cb);
         row.setGravity(Gravity.CENTER);
         layout.addView(row);

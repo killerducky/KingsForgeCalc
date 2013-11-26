@@ -31,6 +31,10 @@ public class DiceSpinner extends Spinner {
         }
     }
     
+    public GameObject getSelectedGameObject() {
+        return (GameObject) getSelectedItem();
+    }
+    
     public void buildSpinner(boolean isSupplyType, int min, int max) {
         if (isSupplyType) {
             for (int i=min; i<=max; i++) {

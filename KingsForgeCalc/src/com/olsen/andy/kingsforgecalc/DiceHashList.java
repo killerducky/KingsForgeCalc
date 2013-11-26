@@ -1,5 +1,6 @@
 package com.olsen.andy.kingsforgecalc;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -7,6 +8,11 @@ import java.util.List;
 public class DiceHashList extends HashMap<GameObject.GOColor, List<GameObject>> {
     DiceHashList() {
         super();
+    }
+    public void clear() {
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            this.put(color, new ArrayList<GameObject>());
+        }
     }
     @Override
     public String toString() {
