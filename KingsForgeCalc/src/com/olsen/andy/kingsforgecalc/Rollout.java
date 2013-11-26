@@ -109,6 +109,12 @@ public class Rollout {
     }
 
     HashMap<String, String> continueReroll() {
+        if (normalLogEnable) {
+            normalLog.append("\nAfter picking reroll:\n" +
+                    "Keep:\n" + rolledHashList.normalString() +
+                    "Reroll:\n" + rerollHashList.normalString()
+            		);
+        }
         rerollDice();
         applyA1TO6();
         moveExtraToRerollHashList();
