@@ -172,7 +172,12 @@ public class Rollout {
             List<GameObject> rolls = rolledHashList.get(color);
             List<GameObject> needed = neededHashList.get(color);
             for (GameObject go : rolls) {
+                // for now don't really consider the bonuses
                 go.removeAllBonus();
+                // but put back the A1TO6 bonus
+                if (bonusListHash.get(GameBonus.Bonus.A1TO6).size() > 0) {
+                    go.applyBonus(bonusListHash.get(GameBonus.Bonus.A1TO6).get(0));
+                }
             }
             Collections.sort(rolls, Collections.reverseOrder());
             // Simple reroll algorithm:

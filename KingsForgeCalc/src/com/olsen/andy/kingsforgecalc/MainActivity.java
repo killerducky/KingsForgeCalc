@@ -8,8 +8,12 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.AudioManager.OnAudioFocusChangeListener;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Menu;
@@ -30,6 +34,7 @@ public class MainActivity extends Activity {
         gameState.sharedPref = PreferenceManager.getDefaultSharedPreferences(this);  // TODO: Where should I put this?
         gameState.mainActivity = this;
         setContentView(R.layout.activity_main);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
         
         LinearLayout new_grid;
         DiceSpinner spinnerOrig;
@@ -118,16 +123,39 @@ public class MainActivity extends Activity {
             doRollout(gameState.NUM_ROLLS);
         }
     }
+
+    OnAudioFocusChangeListener afChangeListner = new OnAudioFocusChangeListener() {
+        @Override
+        public void onAudioFocusChange(int focusChange) {
+            // TODO Auto-generated method stub
+        }
+    };
+    
+    public void playRolloutSound(int resid) {
+        AudioManager am = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+
+        // Request audio focus for playback
+        int result = am.requestAudioFocus(afChangeListner,               
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
         
+        if (result == AudioManager.AUDIOFOCUS_GAIN) {
+            MediaPlayer mediaPlayer = MediaPlayer.create(this, resid);
+            mediaPlayer.start();
+        }
+    }
+
     public void doRollout(Integer totalRolls) {
-    	HashMap<GameObject.GOColor, Integer> supplyHashInt = new HashMap<GameObject.GOColor, Integer>();
-    	DiceHashList neededHashList = new DiceHashList();
-    	for (GameObject.GOColor color : GameObject.GOColor.values()) {
-    		neededHashList.put(color, new ArrayList<GameObject>());
-    	}
-    	List<GameBonus> bonusList = new ArrayList<GameBonus>();
-    	
-    	// get craft requirements out of the widgets
+        playRolloutSound(R.raw.dice_roll2);
+        
+        HashMap<GameObject.GOColor, Integer> supplyHashInt = new HashMap<GameObject.GOColor, Integer>();
+        DiceHashList neededHashList = new DiceHashList();
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            neededHashList.put(color, new ArrayList<GameObject>());
+        }
+        List<GameBonus> bonusList = new ArrayList<GameBonus>();
+
+        // get craft requirements out of the widgets
     	LinearLayout new_grid;
     	new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
     	for (int i=0; i<new_grid.getChildCount(); i++) {
