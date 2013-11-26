@@ -2,17 +2,14 @@ package com.olsen.andy.kingsforgecalc;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Menu;
@@ -24,14 +21,14 @@ import android.widget.TextView;
 
 
 public class MainActivity extends Activity {
-	Random random = new Random(new Date().getTime());
-    public SharedPreferences sharedPref;
-    private static final int NUM_ROLLS = 1000;
+    private GameState gameState;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);  // TODO: Where should I put this?
+        gameState = GameState.getInstance();
+        gameState.sharedPref = PreferenceManager.getDefaultSharedPreferences(this);  // TODO: Where should I put this?
+        gameState.mainActivity = this;
         setContentView(R.layout.activity_main);
         
         LinearLayout new_grid;
@@ -99,26 +96,30 @@ public class MainActivity extends Activity {
     }
     
     public void doPickCraftCard(View view) {
-        //Toast.makeText(getApplicationContext(), "test", Toast.LENGTH_LONG).show();
+        //Toast.makeText(getApplicationContext(), "Pick craft card not implemented", Toast.LENGTH_LONG).show();
     }
-    
+
     public void doRollout1(View view) {
-        if (sharedPref.getBoolean("pref_debug_all_1s", false)) {
-            doRollout(1, new RollAll1s(sharedPref));
+        if (gameState.sharedPref.getBoolean("pref_debug_all_1s", false)) {
+            gameState.rollout = new RollAll1s();
+            doRollout(1);
         } else {
-            doRollout(1, new Rollout(sharedPref));
+            gameState.rollout = new Rollout();
+            doRollout(1);
         }
     }
 
     public void doRollout(View view) {
-        if (sharedPref.getBoolean("pref_debug_all_1s", false)) {
-            doRollout(NUM_ROLLS, new RollAll1s(sharedPref));
+        if (gameState.sharedPref.getBoolean("pref_debug_all_1s", false)) {
+            gameState.rollout = new RollAll1s();
+            doRollout(gameState.NUM_ROLLS);
         } else {
-            doRollout(NUM_ROLLS, new Rollout(sharedPref));
+            gameState.rollout = new Rollout();
+            doRollout(gameState.NUM_ROLLS);
         }
     }
         
-    public void doRollout(Integer totalRolls, Rollout rollout) {
+    public void doRollout(Integer totalRolls) {
     	HashMap<GameObject.GOColor, Integer> supplyHashInt = new HashMap<GameObject.GOColor, Integer>();
     	DiceHashList neededHashList = new DiceHashList();
     	for (GameObject.GOColor color : GameObject.GOColor.values()) {
@@ -166,23 +167,30 @@ public class MainActivity extends Activity {
     		Collections.reverse(neededHashList.get(color));
     	}
         
-    	HashMap<String, String> result = rollout.doRollout(neededHashList, supplyHashInt, bonusList, totalRolls);
-
-    	TextView rolloutResults = (TextView) findViewById(R.id.rollout_results);
-    	rolloutResults.setText(result.get("result"));
-
-    	if (sharedPref.getBoolean("pref_debug_log_enable",  false)) {
-    		AlertDialog.Builder resultbox = new AlertDialog.Builder(this);
-    		resultbox.setMessage(
-    		        "Final Results:\n" + result.get("result") + 
-    		        "\n\nNormal Log:\n" + result.get("normalLog") + 
-    		        "\n\nDebug Info:\n" + result.get("debugLog")
-    		        );
-    		resultbox.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
-    			public void onClick(DialogInterface arg0, int arg1) {}
-    		});
-        	resultbox.show();
+    	HashMap<String, String> result = gameState.rollout.doRollout(neededHashList, supplyHashInt, bonusList, totalRolls);
+    	if (result.containsKey("RerollDialog")) {
+    	    
     	} else {
+    	    showRolloutResults(result);
+    	}
+    }
+    
+    public void showRolloutResults(HashMap<String, String> result) {
+        TextView rolloutResults = (TextView) findViewById(R.id.rollout_results);
+        rolloutResults.setText(result.get("result"));
+
+        if (gameState.sharedPref.getBoolean("pref_debug_log_enable",  false)) {
+            AlertDialog.Builder resultbox = new AlertDialog.Builder(this);
+            resultbox.setMessage(
+                    "Final Results:\n" + result.get("result") + 
+                    "\n\nNormal Log:\n" + result.get("normalLog") + 
+                    "\n\nDebug Info:\n" + result.get("debugLog")
+                    );
+            resultbox.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface arg0, int arg1) {}
+            });
+            resultbox.show();
+        } else {
             AlertDialog.Builder resultbox = new AlertDialog.Builder(this);
             resultbox.setMessage(
                     "Final Results:\n" + result.get("result") + 
@@ -191,8 +199,7 @@ public class MainActivity extends Activity {
                 public void onClick(DialogInterface arg0, int arg1) {}
             });
             resultbox.show();
-    	}
-
+        }
     }
 
     // for a time test, require 3 black 6s, and have 4 "+1 (3)" bonuses = (5/6)^3 = 57.87
@@ -208,8 +215,8 @@ public class MainActivity extends Activity {
     // Black 652 , supply 3 black, P2, P1, P1, roll 541.  -- you must P2 on the 4
 
     class RollAll1s extends Rollout {
-        public RollAll1s(SharedPreferences sharedPref) {
-            super(sharedPref);
+        public RollAll1s() {
+            super();
         }
 
         @Override
@@ -226,8 +233,8 @@ public class MainActivity extends Activity {
 
     class CustomRollout extends Rollout {
         private DiceHashList rolledHashList;
-        public CustomRollout(SharedPreferences sharedPref, DiceHashList rolledHashList) {
-            super(sharedPref);
+        public CustomRollout(DiceHashList rolledHashList) {
+            super();
             this.rolledHashList = rolledHashList;
         }
 
@@ -247,40 +254,40 @@ public class MainActivity extends Activity {
         public void setupTest();
     }
     
-    class TestPerformance implements SetupTest {
-        public void setupTest() {
-            LinearLayout new_grid;
-            new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
-            for (int i=0; i<new_grid.getChildCount(); i++) {
-                Spinner spinner = (Spinner) new_grid.getChildAt(i);
-                setSpinnerDeleted(spinner);
-            }
-            for (int i=0; i<3; i++) {
-                Spinner spinner = (Spinner) new_grid.getChildAt(i);
-                spinner.setSelection(6-1);
-                // FIXME still need to set it to black...
-            }
-
-            new_grid = (LinearLayout) findViewById(R.id.new_supply_grid);
-            Spinner spinner;
-            spinner = (Spinner) new_grid.getChildAt(0);
-            spinner.setSelection(3);
-            spinner = (Spinner) new_grid.getChildAt(1);
-            spinner.setSelection(0);
-            spinner = (Spinner) new_grid.getChildAt(2);
-            spinner.setSelection(0);
-            spinner = (Spinner) new_grid.getChildAt(3);
-            spinner.setSelection(0);
-            // FIXME: Add back in new bonus method
-//            supply_adapter.setSelectedPos(null);
-//            supply_die.clear();
-//            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-//            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-//            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-//            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
-            testRollout = new Rollout(sharedPref);
-        }
-    }
+//    class TestPerformance implements SetupTest {
+//        public void setupTest() {
+//            LinearLayout new_grid;
+//            new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
+//            for (int i=0; i<new_grid.getChildCount(); i++) {
+//                Spinner spinner = (Spinner) new_grid.getChildAt(i);
+//                setSpinnerDeleted(spinner);
+//            }
+//            for (int i=0; i<3; i++) {
+//                Spinner spinner = (Spinner) new_grid.getChildAt(i);
+//                spinner.setSelection(6-1);
+//                // FIXME still need to set it to black...
+//            }
+//
+//            new_grid = (LinearLayout) findViewById(R.id.new_supply_grid);
+//            Spinner spinner;
+//            spinner = (Spinner) new_grid.getChildAt(0);
+//            spinner.setSelection(3);
+//            spinner = (Spinner) new_grid.getChildAt(1);
+//            spinner.setSelection(0);
+//            spinner = (Spinner) new_grid.getChildAt(2);
+//            spinner.setSelection(0);
+//            spinner = (Spinner) new_grid.getChildAt(3);
+//            spinner.setSelection(0);
+//            // FIXME: Add back in new bonus method
+////            supply_adapter.setSelectedPos(null);
+////            supply_die.clear();
+////            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+////            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+////            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+////            supply_die.add(new GameBonus(GameBonus.Bonus.P1X3));
+//            testRollout = new Rollout(this.parent);
+//        }
+//    }
     
 //    class TestP2Pass implements SetupTest {
 //        public void setupTest() {
@@ -396,7 +403,7 @@ public class MainActivity extends Activity {
 //            setupTests.add(new TestWD());
 //            setupTests.add(new TestP2P1A());
 //            setupTests.add(new TestP2P1B());
-            setupTests.add(new TestPerformance());
+//            setupTests.add(new TestPerformance());
 //            setupTests.add(new TestP2Pass());
 //            setupTests.add(new TestP2Fail());
             testIter = setupTests.iterator();
@@ -411,7 +418,8 @@ public class MainActivity extends Activity {
         if (testRollout == null) {
             pickTest();
         }
-        doRollout(1, testRollout);
+        gameState.rollout = testRollout;
+        doRollout(1);
     }
     
     private DiceHashList diceHashListBuilder(

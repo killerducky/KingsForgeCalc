@@ -19,14 +19,13 @@
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name="com.olsen.andy.kingsforgecalc.RolloutActivity"
-            android:label="@string/title_activity_rollout"
-            android:parentActivityName="com.olsen.andy.kingsforgecalc" >
+            android:name="com.olsen.andy.kingsforgecalc.RerollDialog"
+            android:label="Reroll Dialog"
+            android:parentActivityName="com.olsen.andy.kingsforgecalc.MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.olsen.andy.kingsforgecalc" />

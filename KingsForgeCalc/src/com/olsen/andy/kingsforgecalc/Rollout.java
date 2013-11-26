@@ -5,14 +5,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Locale;
 import java.util.Random;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 
 public class Rollout {
-    private SharedPreferences sharedPref;
-
+    private GameState gameState;
     private Random random = new Random();
     private StringBuilder debugLog;
     private StringBuilder normalLog;
@@ -25,10 +24,17 @@ public class Rollout {
     private HashMap<GameObject.GOColor, Integer> supplyHashInt;
     boolean debug_roll_all_1s;
     private GameBonusHashList bonusListHash;
+    Integer diceDeficit = 0;
+    Integer successes = 0;
+    StringBuilder result;
+    long startTime;
+    boolean haveEnoughDice;
+    Integer totalRolls;
 
-    public Rollout(SharedPreferences sharedPref) {
-        this.sharedPref = sharedPref;
-        debug_roll_all_1s = sharedPref.getBoolean("pref_debug_all_1s", false);
+    
+    public Rollout() {
+        gameState = GameState.getInstance();
+        debug_roll_all_1s = gameState.sharedPref.getBoolean("pref_debug_all_1s", false);
     }
 
     public HashMap<String, String> doRollout(
@@ -37,18 +43,16 @@ public class Rollout {
             List<GameBonus> bonusList, 
             Integer totalRolls
             ) {
-        Integer diceDeficit = 0;
-        Integer successes = 0;
-        StringBuilder result;
-        debugLog = new StringBuilder(); // initialize log
+        debugLog = new StringBuilder();
         normalLog = new StringBuilder();
         
-        long startTime = System.currentTimeMillis();
-        this.rolledHashList = new DiceHashList();
-        this.rerollHashList  = new DiceHashList();
-        this.bonusListHash   = new GameBonusHashList();
+        startTime = System.currentTimeMillis();
+        rolledHashList = new DiceHashList();
+        rerollHashList  = new DiceHashList();
+        bonusListHash   = new GameBonusHashList();
         this.neededHashList = neededHashList;
         this.supplyHashInt  = supplyHashInt;
+        this.totalRolls = totalRolls;
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             diceDeficit += Math.max(0, neededHashList.get(color).size() - supplyHashInt.get(color));
         }
@@ -62,11 +66,11 @@ public class Rollout {
         
         normalLog.append("\nCraft Card:\n" + neededHashList.normalString());
 
-        boolean haveEnoughDice = diceDeficit <= bonusListHash.get(GameBonus.Bonus.WD).size();
+        haveEnoughDice = diceDeficit <= bonusListHash.get(GameBonus.Bonus.WD).size();
         if (haveEnoughDice) {
             for (int x = 0; x < totalRolls; x++) {
                 normalLogEnable = (x==0);
-                debugLogEnable = (x==0 && sharedPref.getBoolean("pref_debug_log_enable",  false)); // only log the first run
+                debugLogEnable = (x==0 && gameState.sharedPref.getBoolean("pref_debug_log_enable",  false)); // only log the first run
                 if (debugLogEnable) { debugLog.append("\ndebug_roll_all_1s=" + debug_roll_all_1s); }
                 rollAllNormalDice();
                 rollWhiteDie();
@@ -76,6 +80,14 @@ public class Rollout {
                 recursion();
                 if (debugLogEnable) { debugLog.append("\ndbgCount=" + dbgCount); }
                 if (!recursionSuccess && bonusListHash.get(GameBonus.Bonus.RR).size() > 0) {
+                    if (totalRolls==1) {
+                        Intent intent = new Intent(gameState.mainActivity, RerollDialog.class);
+                        gameState.mainActivity.startActivity(intent);
+//                        Toast.makeText(mainActivity.getApplicationContext(), "TODO: pick rolls", Toast.LENGTH_LONG).show();
+                        HashMap<String, String> resultHash = new HashMap<String, String>();
+                        resultHash.put("RerollDialog", "Yes");
+                        return resultHash;
+                    }
                     rerollDice();
                     applyA1TO6();
                     moveExtraToRerollHashList();
@@ -93,6 +105,29 @@ public class Rollout {
                 }
             }
         }
+        return formatResults();
+    }
+
+    HashMap<String, String> continueReroll() {
+        rerollDice();
+        applyA1TO6();
+        moveExtraToRerollHashList();
+        setupRecursion();
+        recursion();
+        if (debugLogEnable) { debugLog.append("\ndbgCount=" + dbgCount); }
+        if (recursionSuccess) { 
+            successes++;
+        } else {
+            if (normalLogEnable) {
+                normalLog.append("\nFailed to Craft" +
+                        "\nBonuses\n" + bonusListHash);
+            }
+        }
+        return formatResults();
+    }
+
+
+    HashMap<String, String> formatResults() {
         if (!haveEnoughDice) {
             result = new StringBuilder("Insufficient dice");
         } else {
