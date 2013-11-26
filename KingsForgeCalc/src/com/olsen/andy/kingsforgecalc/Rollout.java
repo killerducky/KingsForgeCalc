@@ -23,7 +23,7 @@ public class Rollout {
     DiceHashList rerollHashList;
     private HashMap<GameObject.GOColor, Integer> supplyHashInt;
     boolean debug_roll_all_1s;
-    private GameBonusHashList bonusListHash;
+    GameBonusHashList bonusListHash;
     Integer diceDeficit = 0;
     Integer successes = 0;
     StringBuilder result;
@@ -192,6 +192,9 @@ public class Rollout {
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             Collections.sort(rerollHashList.get(color), Collections.reverseOrder());
         }
+        for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
+            gb.setKeepWhiteDie(gb.getWhiteDieValue() >= 4);
+        }
         if (normalLogEnable) { 
             normalLog.append("\nKeep:\n" + rolledHashList.normalString() +
                     "\nReroll old:\n" + rerollHashList.normalString());
@@ -213,13 +216,13 @@ public class Rollout {
         }
         for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
             // TODO: Improve this, for now just reroll if below average
-            if (gb.getWhiteDieValue() < 4) {
+            if (gb.getKeepWhiteDie()) {
+                if (debugLogEnable) { debugLog.append("\nKeep white: " + gb); }
+            } else {
                 if (normalLogEnable) { normalLog.append("\nReroll Old=" + gb); }
                 gb.rollWhiteDie();
                 if (debugLogEnable) { debugLog.append("\nReroll white: " + gb); }
                 if (normalLogEnable) { normalLog.append(" New=" + gb); }
-            } else {
-                if (debugLogEnable) { debugLog.append("\nKeep white: " + gb); }
             }
         }
         if (debugLogEnable) { 
@@ -404,7 +407,7 @@ public class Rollout {
                 rolls.add(go);
                 Collections.sort(rolls, Collections.reverseOrder());
                 recursion();
-                rolls = saveRolls;  // remove white die and restore original order
+                rolledHashList.put(color, saveRolls);  // remove white die and restore original order
                 break; // It's required to use the white die here, so just quit now
             } else {
                 if (rolls.get(needed.size()-1).getCurrValue() < gb.applyBonus(null)) {
@@ -414,8 +417,8 @@ public class Rollout {
                     rolls.get(needed.size()-1).applyBonus(gb);
                     Collections.sort(rolls, Collections.reverseOrder());
                     recursion();
-                    rolls = saveRolls;  // restore original order
-                    rolls.get(needed.size()-1).removeBonus(gb);
+                    saveRolls.get(needed.size()-1).removeBonus(gb);
+                    rolledHashList.put(color, saveRolls);  // remove white die and restore original order
                 }
             }
         }
@@ -539,19 +542,5 @@ public class Rollout {
         }
         return rolls;
     }
-
-//    private String diceHashListToString(HashMap<GameObject.GOColor, List<Integer>> diceHashList) {
-//        String log = "\n";
-//        for (GameObject.GOColor color : GameObject.GOColor.values()) {
-//            log += rollsToString(color, diceHashList.get(color)) + " ";
-//        }
-//        return log;
-//    }
-
-//    private String rollsToString(GameObject.GOColor color, List<Integer> rolls) {
-//        String log;
-//        log = color + ":" + rolls; 
-//        return log;
-//    }
 
 }

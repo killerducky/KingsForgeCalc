@@ -18,16 +18,25 @@ import android.widget.TextView;
 
 public class RerollDialog extends Activity {
     private GameState gameState;
-    private List<CheckBox> cbList;
-    private List<DiceSpinner> diceSpinnerList;
+    private List<RowState> rowStateList;
+    
+    private class RowState {
+        DiceSpinner diceSpinner;
+        GameBonus   gb;
+        CheckBox    cb;
+        public RowState(DiceSpinner diceSpinner, GameBonus gb, CheckBox cb) {
+            this.diceSpinner = diceSpinner;
+            this.gb = gb;
+            this.cb = cb;
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         gameState = GameState.getInstance();
-        cbList = new ArrayList<CheckBox>();
-        diceSpinnerList = new ArrayList<DiceSpinner>();
+        rowStateList = new ArrayList<RowState>();
         ScrollView scroll = new ScrollView(this);
 
         LinearLayout layout = new LinearLayout(this);
@@ -35,12 +44,15 @@ public class RerollDialog extends Activity {
         TextView tv;
         tv = new TextView(this);
         tv.setTextSize(20);
+        tv.setGravity(Gravity.CENTER);
         tv.setText("Mark the dice you want to keep.\nOthers will be rerolled.\n");
         layout.addView(tv);
         tv = new TextView(this);
         tv.setText("Craft Card:\n" + gameState.rollout.neededHashList.normalString() + "\n" +
                 "Recommend keep:\n" + gameState.rollout.rolledHashList.normalString() + "\n" +
                 "Recommend reroll:\n" + gameState.rollout.rerollHashList.normalString());
+        tv.setTextSize(16);
+        tv.setGravity(Gravity.CENTER);
         layout.addView(tv);
 
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
@@ -51,8 +63,11 @@ public class RerollDialog extends Activity {
                 addRow(layout, go, false);
             }
         }
+        for (GameBonus gb : gameState.rollout.bonusListHash.get(GameBonus.Bonus.WD)) {
+            addRow(layout, gb);
+        }
         tv = new TextView(this);
-        tv.setTextSize(40);
+        tv.setTextSize(30);
         tv.setText("Reroll now");
         tv.setGravity(Gravity.CENTER);
         tv.setOnClickListener(new OnClickListener() {
@@ -72,17 +87,40 @@ public class RerollDialog extends Activity {
     public void updateRerollHashList() {
         gameState.rollout.rolledHashList.clear();
         gameState.rollout.rerollHashList.clear();
-        Iterator<CheckBox> cbiter = cbList.iterator();
-        CheckBox cb;
-        for (DiceSpinner diceSpinner : diceSpinnerList) {
-            cb = cbiter.next();
-            GameObject go = diceSpinner.getSelectedGameObject();
-            if (cb.isChecked()) {
-                gameState.rollout.rolledHashList.get(go.getColor()).add(go);
+        for (RowState row : rowStateList) {
+            if (row.gb == null) {
+                GameObject go = row.diceSpinner.getSelectedGameObject();
+                if (row.cb.isChecked()) {
+                    gameState.rollout.rolledHashList.get(go.getColor()).add(go);
+                } else {
+                    gameState.rollout.rerollHashList.get(go.getColor()).add(go);
+                }
             } else {
-                gameState.rollout.rerollHashList.get(go.getColor()).add(go);
+                row.gb.setKeepWhiteDie(row.cb.isChecked());
+                // pull selected value out and put it into the GameBonus object
+                row.gb.setWhiteDie(row.diceSpinner.getSelectedGameObject().getCurrValue());
             }
         }
+    }
+
+    public void addRow(ViewGroup layout, GameBonus gb) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        TextView tv = new TextView(this);
+        tv.setText(gb.toString());
+        row.addView(tv);
+        DiceSpinner spinnerClone = new DiceSpinner(this);
+        spinnerClone.buildSpinner(true, 1, 6);
+        spinnerClone.setSelection(gb.getWhiteDieValue()-1); // FIXME super hack
+        spinnerClone.setColor(GameObject.GOColor.BLACK);
+        row.addView(spinnerClone);
+        CheckBox cb;
+        cb = new CheckBox(this.getApplicationContext());
+        cb.setChecked(gb.getKeepWhiteDie());
+        rowStateList.add(new RowState(spinnerClone, gb, cb));
+        row.addView(cb);
+        row.setGravity(Gravity.CENTER);
+        layout.addView(row);
     }
     
     public void addRow(ViewGroup layout, GameObject go, boolean keep) {
@@ -96,8 +134,7 @@ public class RerollDialog extends Activity {
         CheckBox cb;
         cb = new CheckBox(this.getApplicationContext());
         cb.setChecked(keep);
-        cbList.add(cb);
-        diceSpinnerList.add(spinnerClone);
+        rowStateList.add(new RowState(spinnerClone, null, cb));
         row.addView(cb);
         row.setGravity(Gravity.CENTER);
         layout.addView(row);

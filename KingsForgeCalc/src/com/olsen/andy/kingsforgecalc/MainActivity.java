@@ -105,6 +105,7 @@ public class MainActivity extends Activity {
     }
 
     public void doRollout1(View view) {
+        playRolloutSound(R.raw.dice_roll2);
         if (gameState.sharedPref.getBoolean("pref_debug_all_1s", false)) {
             gameState.rollout = new RollAll1s();
             doRollout(1);
@@ -146,8 +147,6 @@ public class MainActivity extends Activity {
     }
 
     public void doRollout(Integer totalRolls) {
-        playRolloutSound(R.raw.dice_roll2);
-        
         HashMap<GameObject.GOColor, Integer> supplyHashInt = new HashMap<GameObject.GOColor, Integer>();
         DiceHashList neededHashList = new DiceHashList();
         for (GameObject.GOColor color : GameObject.GOColor.values()) {

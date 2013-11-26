@@ -6,6 +6,7 @@ import java.util.Random;
 public class GameBonus {
     private Bonus name;
     private Integer white_die_value;
+    private boolean keepWhiteDie = false;
 	private static Random random = new Random();  // TODO should this be like some super global thing?
 	
 	public enum Bonus { 
@@ -67,6 +68,14 @@ public class GameBonus {
     
     public Integer getWhiteDieValue() {
         return white_die_value;
+    }
+    
+    public boolean getKeepWhiteDie() {
+        return keepWhiteDie;
+    }
+    
+    public void setKeepWhiteDie(boolean keep) {
+        keepWhiteDie = keep;
     }
     
     public Integer applyBonus(Integer value) {
