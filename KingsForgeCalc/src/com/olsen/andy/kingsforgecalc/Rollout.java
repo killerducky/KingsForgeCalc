@@ -18,9 +18,9 @@ public class Rollout {
     private boolean debugLogEnable = false;
     private boolean normalLogEnable = false;
 
-    private DiceHashList neededHashList;
-    private DiceHashList rolledHashList;
-    private DiceHashList rerollHashList;
+    DiceHashList neededHashList;
+    DiceHashList rolledHashList;
+    DiceHashList rerollHashList;
     private HashMap<GameObject.GOColor, Integer> supplyHashInt;
     boolean debug_roll_all_1s;
     private GameBonusHashList bonusListHash;
@@ -80,10 +80,10 @@ public class Rollout {
                 recursion();
                 if (debugLogEnable) { debugLog.append("\ndbgCount=" + dbgCount); }
                 if (!recursionSuccess && bonusListHash.get(GameBonus.Bonus.RR).size() > 0) {
+                    pickRecommendedReroll();
                     if (totalRolls==1) {
                         Intent intent = new Intent(gameState.mainActivity, RerollDialog.class);
                         gameState.mainActivity.startActivity(intent);
-//                        Toast.makeText(mainActivity.getApplicationContext(), "TODO: pick rolls", Toast.LENGTH_LONG).show();
                         HashMap<String, String> resultHash = new HashMap<String, String>();
                         resultHash.put("RerollDialog", "Yes");
                         return resultHash;
@@ -160,11 +160,14 @@ public class Rollout {
     }
 
 
-    void rerollDice() {
-        if (debugLogEnable) { debugLog.append("\nBegin reroll dice"); }
+    void pickRecommendedReroll() {
+        if (debugLogEnable) { debugLog.append("\nBegin pick reroll"); }
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             List<GameObject> rolls = rolledHashList.get(color);
             List<GameObject> needed = neededHashList.get(color);
+            for (GameObject go : rolls) {
+                go.removeAllBonus();
+            }
             Collections.sort(rolls, Collections.reverseOrder());
             // Simple reroll algorithm:
             // find the first die that is short.  Reroll it and all smaller ones.
@@ -175,10 +178,16 @@ public class Rollout {
                 }
             }
         }
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            Collections.sort(rerollHashList.get(color), Collections.reverseOrder());
+        }
         if (normalLogEnable) { 
             normalLog.append("\nKeep:\n" + rolledHashList.normalString() +
                     "\nReroll old:\n" + rerollHashList.normalString());
         }
+    }
+    
+    void rerollDice() {
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             // reroll all dice in the rerollHashList.
             for (GameObject go : rerollHashList.get(color)) {
@@ -186,15 +195,15 @@ public class Rollout {
                 rolledHashList.get(color).add(go);
             }
         }
-        if (normalLogEnable) { 
-            normalLog.append("\nReroll new:\n" + rerollHashList.normalString());
+        // log results before sorting again so you can see the original and new separately
+        if (normalLogEnable) { normalLog.append("\nReroll new:\n" + rerollHashList.normalString()); }
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            Collections.sort(rolledHashList.get(color), Collections.reverseOrder());
         }
         for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
             // TODO: Improve this, for now just reroll if below average
             if (gb.getWhiteDieValue() < 4) {
-                if (normalLogEnable) {
-                    normalLog.append("\nReroll Old=" + gb);
-                }
+                if (normalLogEnable) { normalLog.append("\nReroll Old=" + gb); }
                 gb.rollWhiteDie();
                 if (debugLogEnable) { debugLog.append("\nReroll white: " + gb); }
                 if (normalLogEnable) { normalLog.append(" New=" + gb); }

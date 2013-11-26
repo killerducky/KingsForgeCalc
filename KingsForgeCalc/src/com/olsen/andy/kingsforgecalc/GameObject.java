@@ -11,14 +11,14 @@ public class GameObject implements Comparable<GameObject> {
 	public enum GOColor { BLACK, GREEN, RED, BLUE };
 	
     private Integer origValue;
-    private Integer value;
+    private Integer currValue;
     private GOColor color;
     private Integer min;    // TODO it's dumb to have a bunch of copies of these values...
     private Integer max;
     private List<GameBonus> gbList = new ArrayList<GameBonus>();
     
     public int compareTo(GameObject go) {
-        return this.value - go.getCurrValue();
+        return this.currValue - go.getCurrValue();
     }
     
     public GameObject(Integer value, GOColor color) {
@@ -45,7 +45,7 @@ public class GameObject implements Comparable<GameObject> {
 	
 	public void applyBonus(GameBonus gb) {
 	    gbList.add(gb);
-	    value = gb.applyBonus(value);
+	    currValue = gb.applyBonus(currValue);
 	}
 
 	public void removeBonusIfMatch(GameBonus gb) {
@@ -55,14 +55,18 @@ public class GameObject implements Comparable<GameObject> {
 	}
 	public void removeBonus(GameBonus gb) {
 	    gbList.remove(gbList.size()-1);
-	    value = origValue;
+	    currValue = origValue;
 	    for (GameBonus tmpGb : gbList) {
-	        value = tmpGb.applyBonus(value);
+	        currValue = tmpGb.applyBonus(currValue);
 	    }
+	}
+	public void removeAllBonus() {
+	    gbList.clear();
+	    currValue = origValue;
 	}
 	
     public String toString() {
-    	return value.toString();
+    	return currValue.toString();
     }
     
     public boolean duplicateCheck(GameBonus gb) {
@@ -73,13 +77,13 @@ public class GameObject implements Comparable<GameObject> {
     	if (value < min) { value = min; }
     	if (value > max) { value = max; }
         this.origValue = value;
-        this.value     = value;
+        this.currValue     = value;
     }
     public void setColor(GOColor color) { this.color = color; }
     public void setMin(Integer min) { this.min = min; }
     public void setMax(Integer max) { this.max = max; }
 
     public Integer getOrigValue() { return origValue; }
-    public Integer getCurrValue() { return value; }
+    public Integer getCurrValue() { return currValue; }
     public GOColor getColor() { return color; }
 }
