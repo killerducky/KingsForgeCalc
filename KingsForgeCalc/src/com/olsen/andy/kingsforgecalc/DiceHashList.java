@@ -6,8 +6,28 @@ import java.util.List;
 
 @SuppressWarnings("serial")
 public class DiceHashList extends HashMap<GameObject.GOColor, List<GameObject>> {
-    DiceHashList() {
+    public DiceHashList() {
         super();
+    }
+    public static class Builder {
+        private DiceHashList diceHashList;
+
+        public Builder() {
+            diceHashList = new DiceHashList();
+            for (GameObject.GOColor color : GameObject.GOColor.values()) {
+                diceHashList.put(color, new ArrayList<GameObject>());
+            }
+        }
+        public Builder color(GameObject.GOColor color, List<Integer> list) {
+            List<GameObject> goList = diceHashList.get(color);
+            for (int i : list) {
+                goList.add(new GameObject(i, color));
+            }
+            return this;
+        }
+        public DiceHashList build () {
+            return diceHashList;
+        }
     }
     public void clear() {
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
@@ -30,7 +50,7 @@ public class DiceHashList extends HashMap<GameObject.GOColor, List<GameObject>> 
         }
         return str.toString();
     }
-    
+
     public String normalString() {
         StringBuilder str = new StringBuilder();
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
@@ -50,7 +70,7 @@ public class DiceHashList extends HashMap<GameObject.GOColor, List<GameObject>> 
         }
         return str.toString();
     }
-    
+
     public String verboseString() {
         StringBuilder str = new StringBuilder();
         for (GameObject.GOColor color : GameObject.GOColor.values()) {

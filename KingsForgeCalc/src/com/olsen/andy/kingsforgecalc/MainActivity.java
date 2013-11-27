@@ -110,7 +110,9 @@ public class MainActivity extends Activity {
             gameState.rollout = new RollAll1s();
             doRollout(1);
         } else {
-            gameState.rollout = new Rollout();
+            gameState.rollout = new Rollout(
+                    gameState.sharedPref.getBoolean("pref_debug_all_1s", false),
+                    gameState.sharedPref.getBoolean("pref_debug_log_enable", false));
             doRollout(1);
         }
     }
@@ -120,7 +122,9 @@ public class MainActivity extends Activity {
             gameState.rollout = new RollAll1s();
             doRollout(gameState.NUM_ROLLS);
         } else {
-            gameState.rollout = new Rollout();
+            gameState.rollout = new Rollout(
+                    gameState.sharedPref.getBoolean("pref_debug_all_1s", false),
+                    gameState.sharedPref.getBoolean("pref_debug_log_enable", false));
             doRollout(gameState.NUM_ROLLS);
         }
     }
@@ -244,7 +248,9 @@ public class MainActivity extends Activity {
 
     class RollAll1s extends Rollout {
         public RollAll1s() {
-            super();
+            super(
+                    gameState.sharedPref.getBoolean("pref_debug_all_1s", false),
+                    gameState.sharedPref.getBoolean("pref_debug_log_enable", false));
         }
 
         @Override
@@ -257,31 +263,8 @@ public class MainActivity extends Activity {
         }
     }
     
-    DiceHashList neededHashList = new DiceHashList();
+//    DiceHashList neededHashList = new DiceHashList();
 
-    class CustomRollout extends Rollout {
-        private DiceHashList rolledHashList;
-        public CustomRollout(DiceHashList rolledHashList) {
-            super();
-            this.rolledHashList = rolledHashList;
-        }
-
-        @Override
-        protected List<GameObject> roll(GameObject.GOColor color, int amountToRoll) {
-            List<GameObject> rolls = new ArrayList<GameObject>(rolledHashList.get(color));
-            // pad with extra rolls if necessary
-            // (having too many rolls is weird but won't hurt)
-            for (int x = rolls.size(); x < amountToRoll; x++) {
-                rolls.add(new GameObject(1, color));
-            }
-            return rolls;
-        }
-    }
-
-    interface SetupTest {
-        public void setupTest();
-    }
-    
 //    class TestPerformance implements SetupTest {
 //        public void setupTest() {
 //            LinearLayout new_grid;
@@ -423,52 +406,52 @@ public class MainActivity extends Activity {
 //        }
 //    }
     
-    List<SetupTest> setupTests = new ArrayList<SetupTest>();
-    Iterator<SetupTest> testIter;
-    Rollout testRollout;
-    private void pickTest() {
-        if (testRollout == null) {
-//            setupTests.add(new TestWD());
-//            setupTests.add(new TestP2P1A());
-//            setupTests.add(new TestP2P1B());
-//            setupTests.add(new TestPerformance());
-//            setupTests.add(new TestP2Pass());
-//            setupTests.add(new TestP2Fail());
-            testIter = setupTests.iterator();
-        }
-        // if at end, restart
-        if (!testIter.hasNext()) { testIter = setupTests.iterator(); }
-        testIter.next().setupTest();
-    }
+//    List<SetupTest> setupTests = new ArrayList<SetupTest>();
+//    Iterator<SetupTest> testIter;
+//    Rollout testRollout;
+//    private void pickTest() {
+//        if (testRollout == null) {
+////            setupTests.add(new TestWD());
+////            setupTests.add(new TestP2P1A());
+////            setupTests.add(new TestP2P1B());
+////            setupTests.add(new TestPerformance());
+////            setupTests.add(new TestP2Pass());
+////            setupTests.add(new TestP2Fail());
+//            testIter = setupTests.iterator();
+//        }
+//        // if at end, restart
+//        if (!testIter.hasNext()) { testIter = setupTests.iterator(); }
+//        testIter.next().setupTest();
+//    }
+//    
+//    // FIXME add back way to select this
+//    private void runTest() {
+//        if (testRollout == null) {
+//            pickTest();
+//        }
+//        gameState.rollout = testRollout;
+//        doRollout(1);
+//    }
     
-    // FIXME add back way to select this
-    private void runTest() {
-        if (testRollout == null) {
-            pickTest();
-        }
-        gameState.rollout = testRollout;
-        doRollout(1);
-    }
-    
-    private DiceHashList diceHashListBuilder(
-            List<Integer> black, List<Integer> green, List<Integer> red, List<Integer> blue) {
-        DiceHashList diceHashList = new DiceHashList();
-        for (GameObject.GOColor color : GameObject.GOColor.values()) {
-            diceHashList.put(color, new ArrayList<GameObject>());
-        }
-        for (int i : black) {
-            diceHashList.get(GameObject.GOColor.BLACK).add(new GameObject(i, GameObject.GOColor.BLACK));
-        }
-        for (int i : green) {
-            diceHashList.get(GameObject.GOColor.GREEN).add(new GameObject(i, GameObject.GOColor.GREEN));
-        }
-        for (int i : red) {
-            diceHashList.get(GameObject.GOColor.RED).add(new GameObject(i, GameObject.GOColor.RED));
-        }
-        for (int i : blue) {
-            diceHashList.get(GameObject.GOColor.BLUE).add(new GameObject(i, GameObject.GOColor.BLUE));
-        }
-        return diceHashList;
-    }
+//    private DiceHashList diceHashListBuilder(
+//            List<Integer> black, List<Integer> green, List<Integer> red, List<Integer> blue) {
+//        DiceHashList diceHashList = new DiceHashList();
+//        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+//            diceHashList.put(color, new ArrayList<GameObject>());
+//        }
+//        for (int i : black) {
+//            diceHashList.get(GameObject.GOColor.BLACK).add(new GameObject(i, GameObject.GOColor.BLACK));
+//        }
+//        for (int i : green) {
+//            diceHashList.get(GameObject.GOColor.GREEN).add(new GameObject(i, GameObject.GOColor.GREEN));
+//        }
+//        for (int i : red) {
+//            diceHashList.get(GameObject.GOColor.RED).add(new GameObject(i, GameObject.GOColor.RED));
+//        }
+//        for (int i : blue) {
+//            diceHashList.get(GameObject.GOColor.BLUE).add(new GameObject(i, GameObject.GOColor.BLUE));
+//        }
+//        return diceHashList;
+//    }
             
 }

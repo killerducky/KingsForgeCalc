@@ -6,12 +6,27 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+import com.olsen.andy.kingsforgecalc.DiceHashList.Builder;
+
 @SuppressWarnings("serial")
 public class GameBonusHashList extends HashMap<GameBonus.Bonus, List<GameBonus>> implements Iterable<GameBonus> {
     public GameBonusHashList() {
         super();
     }
-    
+    public static class Builder {
+        private GameBonusHashList bonusHashList;
+
+        public Builder() {
+            bonusHashList = new GameBonusHashList();
+            for (GameBonus.Bonus bonusType : GameBonus.Bonus.values()) {
+                bonusHashList.put(bonusType, new ArrayList<GameBonus>());
+            }
+        }
+        public GameBonusHashList build () {
+            return bonusHashList;
+        }
+    }
+
     @Override
     public ListIterator<GameBonus> iterator() {
         ListIterator<GameBonus> it = new MyIter();

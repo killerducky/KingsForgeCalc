@@ -8,7 +8,6 @@ import java.util.ListIterator;
 import java.util.Random;
 
 public class Rollout {
-    private GameState gameState;
     private Random random = new Random();
     private StringBuilder debugLog;
     private StringBuilder normalLog;
@@ -20,6 +19,7 @@ public class Rollout {
     DiceHashList rerollHashList;
     private HashMap<GameObject.GOColor, Integer> supplyHashInt;
     boolean debug_roll_all_1s;
+    boolean pref_debug_log_enable;
     GameBonusHashList bonusHashList;
     Integer successes = 0;
     StringBuilder result;
@@ -35,9 +35,9 @@ public class Rollout {
 //        Integer totalRolls;
 //    }
     
-    public Rollout() {
-        gameState = GameState.getInstance();
-        debug_roll_all_1s = gameState.sharedPref.getBoolean("pref_debug_all_1s", false);
+    public Rollout(boolean debug_roll_all_1s, boolean pref_debug_log_enable) {
+        this.debug_roll_all_1s = debug_roll_all_1s;
+        this.pref_debug_log_enable = pref_debug_log_enable;
     }
 
     public HashMap<String, String> doRollout(
@@ -74,7 +74,7 @@ public class Rollout {
         if (haveEnoughDice) {
             for (int x = 0; x < totalRolls; x++) {
                 normalLogEnable = (x==0);
-                debugLogEnable = (x==0 && gameState.sharedPref.getBoolean("pref_debug_log_enable",  false)); // only log the first run
+                debugLogEnable = (x==0 && pref_debug_log_enable); // only log the first run
                 if (debugLogEnable) { debugLog.append("\ndebug_roll_all_1s=" + debug_roll_all_1s); }
                 rollAllNormalDice();
                 rollWhiteDie();
