@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Random;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
-
 public class Rollout {
     private GameState gameState;
     private Random random = new Random();
@@ -23,14 +20,20 @@ public class Rollout {
     DiceHashList rerollHashList;
     private HashMap<GameObject.GOColor, Integer> supplyHashInt;
     boolean debug_roll_all_1s;
-    GameBonusHashList bonusListHash;
-    Integer diceDeficit = 0;
+    GameBonusHashList bonusHashList;
     Integer successes = 0;
     StringBuilder result;
     long startTime;
+    Integer totalRolls;    
     boolean haveEnoughDice;
-    Integer totalRolls;
-
+    
+//    class RolloutResults {
+//        String normalLog;
+//        String debugLog;
+//        String result;
+//        Integer successes;
+//        Integer totalRolls;
+//    }
     
     public Rollout() {
         gameState = GameState.getInstance();
@@ -45,11 +48,12 @@ public class Rollout {
             ) {
         debugLog = new StringBuilder();
         normalLog = new StringBuilder();
-        
+        Integer diceDeficit = 0;   
+
         startTime = System.currentTimeMillis();
         rolledHashList = new DiceHashList();
         rerollHashList  = new DiceHashList();
-        bonusListHash   = new GameBonusHashList();
+        bonusHashList   = new GameBonusHashList();
         this.neededHashList = neededHashList;
         this.supplyHashInt  = supplyHashInt;
         this.totalRolls = totalRolls;
@@ -58,15 +62,15 @@ public class Rollout {
         }
 
         for (GameBonus.Bonus bonusType : GameBonus.Bonus.values()) {
-            bonusListHash.put(bonusType, new ArrayList<GameBonus>());
+            bonusHashList.put(bonusType, new ArrayList<GameBonus>());
         }
         for (GameBonus bonus : bonusList) {
-            bonusListHash.get(bonus.getBonusType()).add(bonus);
+            bonusHashList.get(bonus.getBonusType()).add(bonus);
         }
         
         normalLog.append("\nCraft Card:\n" + neededHashList.normalString());
 
-        haveEnoughDice = diceDeficit <= bonusListHash.get(GameBonus.Bonus.WD).size();
+        haveEnoughDice = diceDeficit <= bonusHashList.get(GameBonus.Bonus.WD).size();
         if (haveEnoughDice) {
             for (int x = 0; x < totalRolls; x++) {
                 normalLogEnable = (x==0);
@@ -79,11 +83,9 @@ public class Rollout {
                 setupRecursion();
                 recursion();
                 if (debugLogEnable) { debugLog.append("\ndbgCount=" + dbgCount); }
-                if (!recursionSuccess && bonusListHash.get(GameBonus.Bonus.RR).size() > 0) {
+                if (!recursionSuccess && bonusHashList.get(GameBonus.Bonus.RR).size() > 0) {
                     pickRecommendedReroll();
                     if (totalRolls==1) {
-                        Intent intent = new Intent(gameState.mainActivity, RerollDialog.class);
-                        gameState.mainActivity.startActivity(intent);
                         HashMap<String, String> resultHash = new HashMap<String, String>();
                         resultHash.put("RerollDialog", "Yes");
                         return resultHash;
@@ -100,7 +102,7 @@ public class Rollout {
                 } else {
                     if (normalLogEnable) {
                         normalLog.append("\nFailed to Craft" +
-                                "\nBonuses\n" + bonusListHash);
+                                "\nBonuses\n" + bonusHashList);
                     }
                 }
             }
@@ -126,7 +128,7 @@ public class Rollout {
         } else {
             if (normalLogEnable) {
                 normalLog.append("\nFailed to Craft" +
-                        "\nBonuses\n" + bonusListHash);
+                        "\nBonuses\n" + bonusHashList);
             }
         }
         return formatResults();
@@ -154,15 +156,15 @@ public class Rollout {
     }
 
     void rollWhiteDie() {
-        for (GameBonus bonus : bonusListHash.get(GameBonus.Bonus.WD)) {
+        for (GameBonus bonus : bonusHashList.get(GameBonus.Bonus.WD)) {
             if (debug_roll_all_1s) { 
                 bonus.setWhiteDie(1); 
             } else {
                 bonus.rollWhiteDie();
             }
         }
-        if (debugLogEnable) { debugLog.append("\nBonuses=" + bonusListHash); }
-        if (normalLogEnable) { normalLog.append("\nBonuses=" + bonusListHash); }
+        if (debugLogEnable) { debugLog.append("\nBonuses=" + bonusHashList); }
+        if (normalLogEnable) { normalLog.append("\nBonuses=" + bonusHashList); }
     }
 
 
@@ -175,8 +177,8 @@ public class Rollout {
                 // for now don't really consider the bonuses
                 go.removeAllBonus();
                 // but put back the A1TO6 bonus
-                if (bonusListHash.get(GameBonus.Bonus.A1TO6).size() > 0) {
-                    go.applyBonus(bonusListHash.get(GameBonus.Bonus.A1TO6).get(0));
+                if (bonusHashList.get(GameBonus.Bonus.A1TO6).size() > 0) {
+                    go.applyBonus(bonusHashList.get(GameBonus.Bonus.A1TO6).get(0));
                 }
             }
             Collections.sort(rolls, Collections.reverseOrder());
@@ -192,7 +194,7 @@ public class Rollout {
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             Collections.sort(rerollHashList.get(color), Collections.reverseOrder());
         }
-        for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
+        for (GameBonus gb : bonusHashList.get(GameBonus.Bonus.WD)) {
             gb.setKeepWhiteDie(gb.getWhiteDieValue() >= 4);
         }
         if (normalLogEnable) { 
@@ -201,6 +203,61 @@ public class Rollout {
         }
     }
     
+    class SaveState {
+        DiceHashList rolledHashList;
+        DiceHashList rerollHashList;
+        StringBuilder debugLog;
+        StringBuilder normalLog;
+        boolean debugLogEnable;
+        boolean normalLogEnable;
+        Integer totalRolls;
+    }
+    SaveState saveState;
+    void saveStateBeforeReroll() {
+        saveState = new SaveState();
+        saveState.debugLog = new StringBuilder(debugLog);
+        saveState.normalLog = new StringBuilder(normalLog);
+        saveState.debugLogEnable = debugLogEnable;
+        saveState.normalLogEnable = normalLogEnable;
+        saveState.totalRolls = totalRolls;
+        saveState.rolledHashList = new DiceHashList();
+        saveState.rerollHashList = new DiceHashList();
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            saveState.rolledHashList.put(color, new ArrayList<GameObject>());
+            saveState.rerollHashList.put(color, new ArrayList<GameObject>());
+            for (GameObject go : rolledHashList.get(color)) {
+                saveState.rolledHashList.get(color).add(new GameObject(go));
+            }
+            for (GameObject go : rerollHashList.get(color)) {
+                saveState.rerollHashList.get(color).add(new GameObject(go));
+            }
+        }
+    }
+    void restoreStateBeforeReroll(boolean resetSuccessCounter) {
+        if (resetSuccessCounter) {
+            successes = 0;
+            totalRolls = saveState.totalRolls;
+        }
+        debugLog = saveState.debugLog;
+        normalLog = saveState.normalLog;
+        debugLogEnable = saveState.debugLogEnable;
+        normalLogEnable = saveState.normalLogEnable;
+        for (GameObject.GOColor color : GameObject.GOColor.values()) {
+            rolledHashList.put(color, new ArrayList<GameObject>());
+            rerollHashList.put(color, new ArrayList<GameObject>());
+            for (GameObject go : saveState.rolledHashList.get(color)) {
+                rolledHashList.get(color).add(new GameObject(go));
+            }
+            for (GameObject go : saveState.rerollHashList.get(color)) {
+                rerollHashList.get(color).add(new GameObject(go));
+            }
+        }
+    }
+    
+    // Expected State:
+    // rolledHashList - dice to keep, gameBonuses removed (including fake white die)
+    // rerollHashList - dice to roll
+    // bonusHashList  - keepWhiteDie has been set
     void rerollDice() {
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             // reroll all dice in the rerollHashList.
@@ -214,7 +271,7 @@ public class Rollout {
         for (GameObject.GOColor color : GameObject.GOColor.values()) {
             Collections.sort(rolledHashList.get(color), Collections.reverseOrder());
         }
-        for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
+        for (GameBonus gb : bonusHashList.get(GameBonus.Bonus.WD)) {
             // TODO: Improve this, for now just reroll if below average
             if (gb.getKeepWhiteDie()) {
                 if (debugLogEnable) { debugLog.append("\nKeep white: " + gb); }
@@ -266,17 +323,17 @@ public class Rollout {
     }
 
     void applyA1TO6() {
-        if (bonusListHash.get(GameBonus.Bonus.A1TO6).size() > 0) {
+        if (bonusHashList.get(GameBonus.Bonus.A1TO6).size() > 0) {
             for (GameObject.GOColor color : GameObject.GOColor.values()) {
                 List<GameObject> rolls = rolledHashList.get(color);
                 for (GameObject go : rolls) {
                     if (go.getOrigValue() == 1) {
-                        go.applyBonus(bonusListHash.get(GameBonus.Bonus.A1TO6).get(0));  // use the first one.  more than one is redundant 
+                        go.applyBonus(bonusHashList.get(GameBonus.Bonus.A1TO6).get(0));  // use the first one.  more than one is redundant 
                     }
                 }               
                 Collections.sort(rolls, Collections.reverseOrder());
             }
-            for (GameBonus gb : bonusListHash.get(GameBonus.Bonus.WD)) {
+            for (GameBonus gb : bonusHashList.get(GameBonus.Bonus.WD)) {
                 if (gb.getWhiteDieValue() == 1) {
                     gb.setWhiteDie(6);
                     if (debugLogEnable) { debugLog.append("\nUse: 1->6 on WD"); }  // TODO: Log nicely in normalLog
@@ -300,7 +357,7 @@ public class Rollout {
     private void setupRecursion() {
         recursionSuccess = false;
         dbgCount = 0;
-        iterator = bonusListHash.iterator();
+        iterator = bonusHashList.iterator();
     }
     
     private void recursion() {

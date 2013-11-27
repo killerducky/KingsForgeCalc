@@ -20,6 +20,15 @@ public class GameObject implements Comparable<GameObject> {
     public int compareTo(GameObject go) {
         return this.currValue - go.getCurrValue();
     }
+
+    public GameObject(GameObject go) {
+        origValue = go.origValue;
+        currValue = go.currValue;
+        color     = go.color;
+        min = go.min;
+        max = go.max;
+        gbList = new ArrayList<GameBonus>();
+    }
     
     public GameObject(Integer value, GOColor color) {
     	this(value, color, 1, 6);

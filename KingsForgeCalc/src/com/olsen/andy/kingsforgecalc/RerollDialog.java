@@ -11,6 +11,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 public class RerollDialog extends Activity {
     private GameState gameState;
     private List<RowState> rowStateList;
+    private TextView results_tv;
     
     private class RowState {
         DiceSpinner diceSpinner;
@@ -63,25 +65,53 @@ public class RerollDialog extends Activity {
                 addRow(layout, go, false);
             }
         }
-        for (GameBonus gb : gameState.rollout.bonusListHash.get(GameBonus.Bonus.WD)) {
+        for (GameBonus gb : gameState.rollout.bonusHashList.get(GameBonus.Bonus.WD)) {
             addRow(layout, gb);
         }
-        tv = new TextView(this);
-        tv.setTextSize(30);
-        tv.setText("Reroll now");
-        tv.setGravity(Gravity.CENTER);
-        tv.setOnClickListener(new OnClickListener() {
+        addRerollButtons(layout);
+        results_tv = new TextView(this);
+        results_tv.setGravity(Gravity.CENTER);
+        layout.addView(results_tv);
+        scroll.addView(layout);
+        setContentView(scroll);
+    }
+    
+    public void addRerollButtons(LinearLayout layout) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        Button button;
+        button = new Button(this);
+        button.setText("Estimate");
+        button.setOnClickListener(new OnClickListener() {
+            public void onClick(View view) {
+                HashMap<String, String> result = null;
+                updateRerollHashList();
+                for (int i=0; i<1000; i++) {
+                    gameState.rollout.saveStateBeforeReroll();
+                    gameState.rollout.totalRolls = 1000;
+                    result = gameState.rollout.continueReroll();
+                    gameState.rollout.restoreStateBeforeReroll(false);
+                }
+                gameState.rollout.restoreStateBeforeReroll(true);
+                results_tv.setText(result.get("result"));
+            }
+        }); 
+        row.addView(button);
+        button = new Button(this);
+        button.setText("Reroll");
+        button.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
                 finish();
                 HashMap<String, String> result;
                 updateRerollHashList();
+                gameState.mainActivity.playRolloutSound(R.raw.dice_roll2);
                 result = gameState.rollout.continueReroll(); 
                 gameState.mainActivity.showRolloutResults(result);
             }
         });
-        layout.addView(tv);
-        scroll.addView(layout);
-        setContentView(scroll);
+        row.setGravity(Gravity.CENTER);
+        row.addView(button);
+        layout.addView(row);
     }
 
     public void updateRerollHashList() {

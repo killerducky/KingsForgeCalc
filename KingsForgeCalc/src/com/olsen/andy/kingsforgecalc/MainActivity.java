@@ -196,7 +196,8 @@ public class MainActivity extends Activity {
         
     	HashMap<String, String> result = gameState.rollout.doRollout(neededHashList, supplyHashInt, bonusList, totalRolls);
     	if (result.containsKey("RerollDialog")) {
-    	    
+            Intent intent = new Intent(gameState.mainActivity, RerollDialog.class);
+            gameState.mainActivity.startActivity(intent);
     	} else {
     	    showRolloutResults(result);
     	}
