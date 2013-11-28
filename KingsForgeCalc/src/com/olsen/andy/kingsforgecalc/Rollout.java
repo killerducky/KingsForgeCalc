@@ -368,6 +368,17 @@ public class Rollout {
         if (debugLogEnable) { debugLog.append("\nrecursion start"); }
         if (iterator.hasNext()) {
             GameBonus gb = iterator.next();
+            if ( gb.getBonusType() != GameBonus.Bonus.RR &&
+                    gb.getBonusType() != GameBonus.Bonus.A1TO6 && 
+                    gb.getBonusType() != GameBonus.Bonus.WD ) {
+                for (GameObject.GOColor color : GameObject.GOColor.values()) {
+                    // If the white die got placed too early this could happen
+                    if (rolledHashList.get(color).size() < neededHashList.get(color).size()) {
+                        if (debugLogEnable) { debugLog.append("\nInsufficient dice"); }
+                        return;
+                    }
+                }
+            }
             if (debugLogEnable) { debugLog.append("\nnext=" + gb); }
             if (gb.getBonusType() == GameBonus.Bonus.RR || gb.getBonusType() == GameBonus.Bonus.A1TO6) {
                 // These are handled outside, just continue down the recursion

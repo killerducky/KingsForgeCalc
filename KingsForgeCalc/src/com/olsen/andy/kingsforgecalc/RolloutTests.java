@@ -1,16 +1,16 @@
 package com.olsen.andy.kingsforgecalc;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
 
-public class RolloutTests extends TestCase {
+public class RolloutTests {
   
     private class CustomRollout extends Rollout {
         private DiceHashList rolledHashList;

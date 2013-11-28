@@ -28,9 +28,6 @@
             android:label="Reroll"
             android:screenOrientation="portrait"
             android:parentActivityName="com.olsen.andy.kingsforgecalc.MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.olsen.andy.kingsforgecalc" />
         </activity>
         <activity
             android:name="com.olsen.andy.kingsforgecalc.Settings"
