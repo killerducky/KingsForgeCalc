@@ -101,7 +101,9 @@ public class MainActivity extends Activity {
     }
     
     public void doPickCraftCard(View view) {
-        //Toast.makeText(getApplicationContext(), "Pick craft card not implemented", Toast.LENGTH_LONG).show();
+//        Intent intent = new Intent(this, RerollDialog.class);
+        Intent intent = new Intent(this, CraftCardDialog.class);
+        this.startActivity(intent);
     }
 
     public void doRollout1(View view) {

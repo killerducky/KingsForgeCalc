@@ -30,6 +30,13 @@
             android:parentActivityName="com.olsen.andy.kingsforgecalc.MainActivity" >
         </activity>
         <activity
+            android:name="com.olsen.andy.kingsforgecalc.CraftCardDialog"
+            android:label="Pick Craft Card"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Dialog"
+            android:parentActivityName="com.olsen.andy.kingsforgecalc.MainActivity" >
+        </activity>
+        <activity
             android:name="com.olsen.andy.kingsforgecalc.Settings"
             android:label="@string/title_activity_settings" >
         </activity>
