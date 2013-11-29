@@ -115,8 +115,8 @@ public class MainActivity extends Activity {
         for (int i=0; i<cc.goList.size(); i++) {
             DiceSpinner spinner = (DiceSpinner) new_grid.getChildAt(i);
             GameObject go = cc.goList.get(i);
-            spinner.setColor(go.getColor());
             spinner.setSelection(go.getOrigValue()-1);
+            spinner.setColor(go.getColor());
         }
         for (int i=cc.goList.size(); i<new_grid.getChildCount(); i++) {
             DiceSpinner spinner = (DiceSpinner) new_grid.getChildAt(i);

@@ -87,4 +87,5 @@ public class RolloutTests {
         assertTrue (resultHash.get("result").equals("Wins: 100.00% (1/1)"));   
     }
 
+    // TODO: GUI test changing from Axe to Plate Armor
 }

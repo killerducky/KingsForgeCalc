@@ -29,6 +29,7 @@ public class DiceSpinner extends Spinner {
                 go.setColor(color);
             }
         }
+        adapter.notifyDataSetChanged();
     }
     
     public void setDeleted() {
