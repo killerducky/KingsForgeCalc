@@ -11,9 +11,10 @@ import org.junit.Test;
 
 
 public class RolloutTests {
-  
+
     private class CustomRollout extends Rollout {
         private DiceHashList rolledHashList;
+        private Integer white_die_value;
         public CustomRollout(DiceHashList rolledHashList) {
             super(false, false);
             this.rolledHashList = rolledHashList;
@@ -29,9 +30,24 @@ public class RolloutTests {
             }
             return rolls;
         }
+        public void setCustomWhiteDieValue(int value) {
+            white_die_value = value;
+        }
+        @Override
+        void rollWhiteDie() {
+            if (white_die_value != null) {
+                for (GameBonus bonus : bonusHashList.get(GameBonus.Bonus.WD)) {
+                    bonus.setWhiteDie(white_die_value);
+                }
+            } else {
+                super.rollWhiteDie();
+            }
+        }
+        //if (debugLogEnable) { debugLog.append("\nBonuses=" + bonusHashList); }
+        //if (normalLogEnable) { normalLog.append("\nBonuses=" + bonusHashList); }
     }
 
-    
+
     @Test
     public void testP2P1A() {
         // Black 632 , supply 3 black, P2, P1, roll 521.  -- you must P2 on the 1
@@ -48,6 +64,27 @@ public class RolloutTests {
         HashMap<String, String> resultHash = rollout.doRollout(neededHashList, supplyHashInt, bonusList, 1);
         assertTrue (resultHash.get("result").equals("Wins: 100.00% (1/1)"));   
     }
-    
+
+    @Test
+    public void testWD1() {
+        // Bk2, Gr2, supply 1Bk 0Gr, WD, P1, roll Bk1, WD=3 
+        DiceHashList customRolledList = new DiceHashList.Builder().color(GameObject.GOColor.BLACK, Arrays.asList(2)).build();
+        CustomRollout rollout = new CustomRollout(customRolledList);
+        rollout.setCustomWhiteDieValue(6);
+        DiceHashList neededHashList = new DiceHashList.Builder()
+        .color(GameObject.GOColor.BLACK, Arrays.asList(1))
+        .color(GameObject.GOColor.GREEN, Arrays.asList(6))
+        .build();
+        HashMap<GameObject.GOColor, Integer> supplyHashInt = new HashMap<GameObject.GOColor, Integer>();
+        supplyHashInt.put(GameObject.GOColor.BLACK, 1);
+        supplyHashInt.put(GameObject.GOColor.GREEN, 0);
+        supplyHashInt.put(GameObject.GOColor.RED, 0);
+        supplyHashInt.put(GameObject.GOColor.BLUE, 0);
+        List<GameBonus> bonusList = new ArrayList<GameBonus>();
+        bonusList.add(new GameBonus(GameBonus.Bonus.WD));
+        bonusList.add(new GameBonus(GameBonus.Bonus.P1));
+        HashMap<String, String> resultHash = rollout.doRollout(neededHashList, supplyHashInt, bonusList, 1);
+        assertTrue (resultHash.get("result").equals("Wins: 100.00% (1/1)"));   
+    }
 
 }

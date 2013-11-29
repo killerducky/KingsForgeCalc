@@ -375,6 +375,7 @@ public class Rollout {
                     // If the white die got placed too early this could happen
                     if (rolledHashList.get(color).size() < neededHashList.get(color).size()) {
                         if (debugLogEnable) { debugLog.append("\nInsufficient dice"); }
+                        gb = iterator.previous();
                         return;
                     }
                 }

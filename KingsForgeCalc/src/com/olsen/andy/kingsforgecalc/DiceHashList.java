@@ -18,6 +18,39 @@ public class DiceHashList extends HashMap<GameObject.GOColor, List<GameObject>> 
                 diceHashList.put(color, new ArrayList<GameObject>());
             }
         }
+        public Builder(List<Integer> black, List<Integer> green, List<Integer> red, List<Integer>blue) {
+            diceHashList = new DiceHashList();
+            List<GameObject> goList;
+            goList = new ArrayList<GameObject>();
+            if (black != null) {
+                for (int i : black) {
+                    goList.add(new GameObject(i, GameObject.GOColor.BLACK));
+                }
+            }
+            //Builder.color(GameObject.GOColor.BLACK, black);
+            diceHashList.put(GameObject.GOColor.BLACK, goList);
+            goList = new ArrayList<GameObject>();
+            if (black != null) {
+                for (int i : black) {
+                    goList.add(new GameObject(i, GameObject.GOColor.BLACK));
+                }
+            }
+            diceHashList.put(GameObject.GOColor.GREEN, goList);
+            goList = new ArrayList<GameObject>();
+            if (green != null) {
+                for (int i : green) {
+                    goList.add(new GameObject(i, GameObject.GOColor.BLACK));
+                }
+            }
+            diceHashList.put(GameObject.GOColor.BLACK, goList);
+            goList = new ArrayList<GameObject>();
+            if (black != null) {
+                for (int i : black) {
+                    goList.add(new GameObject(i, GameObject.GOColor.BLACK));
+                }
+            }
+            diceHashList.put(GameObject.GOColor.BLACK, goList);
+        }
         public Builder color(GameObject.GOColor color, List<Integer> list) {
             List<GameObject> goList = diceHashList.get(color);
             for (int i : list) {
