@@ -31,6 +31,10 @@ public class DiceSpinner extends Spinner {
         }
     }
     
+    public void setDeleted() {
+        this.setSelection(6+4+1-1); // FIXME horrible hack
+    }
+    
     public GameObject getSelectedGameObject() {
         return (GameObject) getSelectedItem();
     }

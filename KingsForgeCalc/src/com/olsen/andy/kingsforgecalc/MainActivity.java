@@ -3,8 +3,9 @@ package com.olsen.andy.kingsforgecalc;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+
+import com.olsen.andy.kingsforgecalc.CraftCardDialog.CraftCard;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -22,6 +23,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
@@ -101,11 +103,27 @@ public class MainActivity extends Activity {
     }
     
     public void doPickCraftCard(View view) {
-//        Intent intent = new Intent(this, RerollDialog.class);
         Intent intent = new Intent(this, CraftCardDialog.class);
         this.startActivity(intent);
     }
 
+    public void setCraftCard(CraftCardDialog.CraftCard cc) {
+        TextView tv = (TextView) findViewById(R.id.craft_card_header);
+        tv.setText(cc.rank.toString() + " - " + cc.name);
+        LinearLayout new_grid;
+        new_grid = (LinearLayout) findViewById(R.id.new_craftcard_grid);
+        for (int i=0; i<cc.goList.size(); i++) {
+            DiceSpinner spinner = (DiceSpinner) new_grid.getChildAt(i);
+            GameObject go = cc.goList.get(i);
+            spinner.setColor(go.getColor());
+            spinner.setSelection(go.getOrigValue()-1);
+        }
+        for (int i=cc.goList.size(); i<new_grid.getChildCount(); i++) {
+            DiceSpinner spinner = (DiceSpinner) new_grid.getChildAt(i);
+            spinner.setDeleted();
+        }
+    }
+    
     public void doRollout1(View view) {
         playRolloutSound(R.raw.dice_roll2);
         if (gameState.sharedPref.getBoolean("pref_debug_all_1s", false)) {

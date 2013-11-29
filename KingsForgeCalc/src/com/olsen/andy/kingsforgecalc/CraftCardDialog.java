@@ -6,7 +6,10 @@ import java.util.List;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -14,7 +17,7 @@ public class CraftCardDialog extends Activity {
     private GameState gameState;
     private List<CraftCard> ccList;
 
-    private class CraftCard {
+    public class CraftCard {
         public Integer rank;
         public String  name;
         public List<GameObject> goList;
@@ -27,32 +30,53 @@ public class CraftCardDialog extends Activity {
             goList.add(new GameObject(value, color));
             return this;
         }
+        public CraftCard addBlack(Integer value) {
+            goList.add(new GameObject(value, GameObject.GOColor.BLACK));
+            return this;
+        }
+        public CraftCard addGreen(Integer value) {
+            goList.add(new GameObject(value, GameObject.GOColor.GREEN));
+            return this;
+        }
+        public CraftCard addRed(Integer value) {
+            goList.add(new GameObject(value, GameObject.GOColor.RED));
+            return this;
+        }
+        public CraftCard addBlue(Integer value) {
+            goList.add(new GameObject(value, GameObject.GOColor.BLUE));
+            return this;
+        }
     }
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         gameState = GameState.getInstance();
-        ScrollView scroll = new ScrollView(this);
+        initList();
 
+        ScrollView scroll = new ScrollView(this);
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         TextView tv;
-        tv = new TextView(this);
-        tv.setText("test");
-        layout.addView(tv);
-        initList();
-        for (CraftCard cc : ccList) {
+        for (final CraftCard cc : ccList) {  // FIXME is final here ok??
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             tv = new TextView(this);
 //            tv.setText(cc.rank);  // TODO: Why is this not a compile error??
-            tv.setText(cc.rank.toString());
+            tv.setText(cc.rank.toString() + " - ");  // TODO nicer layout
+            tv.setTextSize(30);
             row.addView(tv);
             tv = new TextView(this);
             tv.setText(cc.name);
+            tv.setTextSize(20);
             row.addView(tv);
             row.setGravity(Gravity.CENTER);
+            row.setOnClickListener(new OnClickListener() {
+                public void onClick(View view) {
+                    finish();
+                    gameState.mainActivity.setCraftCard(cc);
+                }
+            });
             layout.addView(row);
         }
         scroll.addView(layout);
@@ -61,9 +85,30 @@ public class CraftCardDialog extends Activity {
     
     public void initList() {
         ccList = new ArrayList<CraftCard>();
-        ccList.add(new CraftCard(1, "Knife").addGO(GameObject.GOColor.BLACK, 6));
-        ccList.add(new CraftCard(2, "Knfdife").addGO(GameObject.GOColor.BLACK, 5));
-        ccList.add(new CraftCard(3, "Knifdfe").addGO(GameObject.GOColor.BLACK, 4));
+        ccList.add(new CraftCard(1, "Anvil").addBlack(1).addBlack(1).addBlack(1));
+        ccList.add(new CraftCard(2, "Knife").addBlack(6));
+        ccList.add(new CraftCard(3, "Shield").addBlack(5).addBlack(5));
+        ccList.add(new CraftCard(4, "Mace").addBlack(4).addBlack(4).addBlack(4));
+        ccList.add(new CraftCard(5, "Axe").addGreen(3).addGreen(3).addBlack(5));
+        ccList.add(new CraftCard(6, "Giant Club").addGreen(3).addGreen(4).addGreen(5));
+        ccList.add(new CraftCard(7, "Ruby Collar").addRed(2));
+        ccList.add(new CraftCard(8, "Bracelet").addRed(6));
+        ccList.add(new CraftCard(9, "Fancy Pipe").addGreen(1).addGreen(1).addRed(6));
+        ccList.add(new CraftCard(10, "Magic Wand").addGreen(3).addBlue(2));
+        ccList.add(new CraftCard(11, "Necklace").addRed(1).addRed(1).addRed(1));
+        ccList.add(new CraftCard(12, "Fancy Toys").addGreen(3).addGreen(5).addRed(2).addRed(2));
+        ccList.add(new CraftCard(13, "Plate Armor").addBlack(3).addBlack(3).addBlack(4).addBlack(4).addBlack(5).addBlack(5));
+        ccList.add(new CraftCard(14, "Short Staff").addGreen(4).addGreen(4).addRed(1).addBlue(4));
+        ccList.add(new CraftCard(15, "Royal Sword").addBlack(3).addBlack(5).addRed(3).addRed(5));
+        ccList.add(new CraftCard(16, "Braced Bow").addBlack(2).addBlack(2).addGreen(3).addGreen(3).addBlue(1).addBlue(2));
+        ccList.add(new CraftCard(17, "Ceremonial Shield").addGreen(3).addGreen(3).addGreen(4).addGreen(4).addRed(3).addRed(3));
+        ccList.add(new CraftCard(18, "Shiny Crossbow").addGreen(4).addGreen(5).addRed(4).addBlue(4));
+        ccList.add(new CraftCard(19, "Ice Sword").addBlack(5).addBlack(5).addBlue(2).addBlue(4));
+        ccList.add(new CraftCard(20, "Holy Hand Grenade").addBlue(1).addBlue(1).addBlue(2));
+        ccList.add(new CraftCard(21, "Blessed Gauntlets").addBlack(6).addBlack(6).addBlack(6).addBlue(2));
+        ccList.add(new CraftCard(22, "Battle Axe").addBlack(4).addBlack(4).addBlack(6).addGreen(4).addRed(4).addBlue(4));
+        ccList.add(new CraftCard(23, "Crown").addBlack(4).addBlack(5).addGreen(3).addRed(2).addRed(4).addRed(5).addBlue(4));
+        ccList.add(new CraftCard(24, "Sword of Destiny").addBlack(6).addGreen(6).addRed(6).addBlue(6));
     }
 
 }
