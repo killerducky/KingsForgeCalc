@@ -88,4 +88,7 @@ public class RolloutTests {
     }
 
     // TODO: GUI test changing from Axe to Plate Armor
+    // TODO: Derek: Royal Sword, reroll, P2 -- P2 is disappearing on estimate
+    // Rolled: Manually set to B4311, R43
+    // Problem before: Rerolls were modifying what user set the dice to
 }

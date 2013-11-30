@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import com.olsen.andy.kingsforgecalc.CraftCardDialog.CraftCard;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -23,7 +21,6 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 public class MainActivity extends Activity {
@@ -35,7 +32,8 @@ public class MainActivity extends Activity {
         gameState = GameState.getInstance();
         gameState.sharedPref = PreferenceManager.getDefaultSharedPreferences(this);  // TODO: Where should I put this?
         gameState.mainActivity = this;
-        setContentView(R.layout.activity_main);
+        View mainView = getLayoutInflater().inflate(R.layout.activity_main, null);
+        setContentView(mainView);
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         
         LinearLayout new_grid;

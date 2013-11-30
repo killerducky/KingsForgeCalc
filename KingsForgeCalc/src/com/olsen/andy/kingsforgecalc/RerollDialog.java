@@ -93,7 +93,7 @@ public class RerollDialog extends Activity {
                     gameState.rollout.restoreStateBeforeReroll(false);
                 }
                 gameState.rollout.restoreStateBeforeReroll(true);
-                results_tv.setText(result.get("result"));
+                results_tv.setText(result.get("result")+"\n"+result.get("normalLog"));
             }
         }); 
         row.addView(button);
@@ -119,7 +119,7 @@ public class RerollDialog extends Activity {
         gameState.rollout.rerollHashList.clear();
         for (RowState row : rowStateList) {
             if (row.gb == null) {
-                GameObject go = row.diceSpinner.getSelectedGameObject();
+                GameObject go = new GameObject(row.diceSpinner.getSelectedGameObject());
                 if (row.cb.isChecked()) {
                     gameState.rollout.rolledHashList.get(go.getColor()).add(go);
                 } else {
